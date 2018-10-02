@@ -14,4 +14,7 @@ kernel
 kernelmemfs
 mkfs
 .gdbinit
-Makefile
+
+osxmake
+run
+clean
