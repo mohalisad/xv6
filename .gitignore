@@ -15,6 +15,7 @@ kernelmemfs
 mkfs
 .gdbinit
 
-osxmake
+mymake
 run
 clean
+vpn
