@@ -178,7 +178,7 @@ consputc(int c)
     for(;;)
       ;
   }
-  
+
   if(c == BACKSPACE){
     uartputc('\b'); uartputc(' '); uartputc('\b');
   } else
@@ -227,6 +227,7 @@ consoleintr(int (*getc)(void))
         input.e--;
         consputc(BACKSPACE);
       }
+      input.c = input.e;
       break;
     case C('H'): case '\x7f':  // Backspace
       if(input.c != input.w){
