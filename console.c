@@ -200,6 +200,7 @@ struct {
   uint r;  // Read index
   uint w;  // Write index
   uint e;  // Edit index
+  uint c;  // Cursor index
 } input;
 
 #define C(x)  ((x)-'@')  // Control-x
@@ -207,7 +208,7 @@ struct {
 void
 consoleintr(int (*getc)(void))
 {
-  int c, doprocdump = 0;
+  int c, doprocdump = 0,i;
 
   acquire(&cons.lock);
   while((c = getc()) >= 0){
@@ -224,24 +225,43 @@ consoleintr(int (*getc)(void))
       }
       break;
     case C('H'): case '\x7f':  // Backspace
-      if(input.e != input.w){
+      if(input.c != input.w){
         input.e--;
+        input.c--;
+        for (i = input.c; i<input.e ; i++){
+          input.buf[i%INPUT_BUF] = input.buf[(i+1)%INPUT_BUF];
+        }
         consputc(BACKSPACE);
       }
       break;
     case KEY_LF:
-      if(input.e != input.w){
-        input.e--;
+      if(input.c != input.w){
+        input.c--;
+        consputc(c);
+      }
+      break;
+    case KEY_RT:
+      if(input.e != input.c){
+        input.c++;
         consputc(c);
       }
       break;
     default:
       if(c != 0 && input.e-input.r < INPUT_BUF){
         c = (c == '\r') ? '\n' : c;
-        input.buf[input.e++ % INPUT_BUF] = c;
+        if(c!='\n'){
+          input.e++;
+          for(i=input.e;i>input.c;i--){
+            input.buf[i] = input.buf[i-1];
+          }
+          input.buf[input.c++ % INPUT_BUF] = c;
+        }else{
+          input.buf[input.e++ % INPUT_BUF] = c;
+        }
         consputc(c);
         if(c == '\n' || c == C('D') || input.e == input.r+INPUT_BUF){
           input.w = input.e;
+          input.c = input.e;
           wakeup(&input.r);
         }
       }
