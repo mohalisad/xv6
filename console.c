@@ -150,7 +150,7 @@ cgaputc(int c)
   else if(c == KEY_LF)
     pos--;
   else if(c != KEY_RT && c != KEY_LF)
-    crt[pos++] = (c&0xff) | 0x0200;  // black on white
+    crt[pos++] = (c&0xff) | 0x0200;  // green on white;)
   else pos--;
 
   if(pos < 0 || pos > 25*80)
@@ -205,6 +205,18 @@ struct {
 
 #define C(x)  ((x)-'@')  // Control-x
 
+//print from cursor to edit
+void
+printc2e(void){
+  int i;
+  for(i=input.c;i<input.e;i++){
+    consputc(input.buf[i%INPUT_BUF]);
+  }
+  for(i=input.c;i<input.e;i++){
+    consputc(KEY_LF);
+  }
+}
+
 void
 consoleintr(int (*getc)(void))
 {
@@ -232,6 +244,7 @@ consoleintr(int (*getc)(void))
           input.buf[i%INPUT_BUF] = input.buf[(i+1)%INPUT_BUF];
         }
         consputc(BACKSPACE);
+        printc2e();
       }
       break;
     case KEY_LF:
@@ -252,13 +265,16 @@ consoleintr(int (*getc)(void))
         if(c!='\n'){
           input.e++;
           for(i=input.e;i>input.c;i--){
-            input.buf[i] = input.buf[i-1];
+            input.buf[i%INPUT_BUF] = input.buf[(i-1)%INPUT_BUF];
           }
           input.buf[input.c++ % INPUT_BUF] = c;
+          consputc(c);
+          printc2e();
         }else{
           input.buf[input.e++ % INPUT_BUF] = c;
+          consputc(c);
         }
-        consputc(c);
+
         if(c == '\n' || c == C('D') || input.e == input.r+INPUT_BUF){
           input.w = input.e;
           input.c = input.e;
