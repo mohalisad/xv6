@@ -14,22 +14,20 @@ int str2int(char* inp);
 void int2str(int input,char* output);
 int get_next_int(int fd);
 void print_int(int fd,int num);
+void sort_iarray(int* a);
 void swap_in_iarray(int* arr,int i,int j);
 void swap_in_carray(char* arr,int i,int j);
 
 int main(void){
   int a[COUNTS];
-  int i,j;
+  int i;
   int file;
   write(STDOUT,"The program pid is:",19);
   print_int(STDOUT,getpid());
   for(i=0;i<COUNTS;i++){
     a[i] = get_next_int(STDIN);
   }
-  for(i=0;i<COUNTS;i++)
-    for(j=0;j<COUNTS-i-1;j++)
-      if(a[j]>a[j+1])
-        swap_in_iarray(a,j,j+1);
+  sort_iarray(a);
   unlink(FILENAME);
   file = open(FILENAME,O_CREATE|O_WRONLY);
   for(i=0;i<COUNTS;i++)
@@ -82,6 +80,14 @@ void print_int(int fd,int num){
   int2str(num,buf);
   write(fd,buf,strlen(buf));
   write(fd,"\n",1);
+}
+
+void sort_iarray(int* a){
+  int i,j;
+  for(i=0;i<COUNTS;i++)
+    for(j=0;j<COUNTS-i-1;j++)
+      if(a[j]>a[j+1])
+        swap_in_iarray(a,j,j+1);
 }
 
 void swap_in_iarray(int* arr,int i,int j){
