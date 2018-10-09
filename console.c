@@ -178,19 +178,11 @@ consputc(int c)
     for(;;)
       ;
   }
-
-  switch (c) {
-    case BACKSPACE:
-      uartputc('\b');
-      uartputc(' ');
-      uartputc('\b');
-      break;
-
-    default:
-      uartputc(c);
-      break;
-  }
-
+  
+  if(c == BACKSPACE){
+    uartputc('\b'); uartputc(' '); uartputc('\b');
+  } else
+    uartputc(c);
   cgaputc(c);
 }
 
