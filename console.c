@@ -124,6 +124,8 @@ panic(char *s)
 }
 
 //PAGEBREAK: 50
+#define KEY_LF 0xE4
+#define KEY_RT 0xE5
 #define BACKSPACE 0x100
 #define CRTPORT 0x3d4
 static ushort *crt = (ushort*)P2V(0xb8000);  // CGA memory
@@ -143,8 +145,13 @@ cgaputc(int c)
     pos += 80 - pos%80;
   else if(c == BACKSPACE){
     if(pos > 0) --pos;
-  } else
-    crt[pos++] = (c&0xff) | 0x0700;  // black on white
+  } else if(c == KEY_RT)
+      pos++;
+  else if(c == KEY_LF)
+    pos--;
+  else if(c != KEY_RT && c != KEY_LF)
+    crt[pos++] = (c&0xff) | 0x0200;  // black on white
+  else pos--;
 
   if(pos < 0 || pos > 25*80)
     panic("pos under/overflow");
@@ -159,7 +166,8 @@ cgaputc(int c)
   outb(CRTPORT+1, pos>>8);
   outb(CRTPORT, 15);
   outb(CRTPORT+1, pos);
-  crt[pos] = ' ' | 0x0700;
+  if(c != KEY_LF && c != KEY_RT)
+      crt[pos] = ' ' | 0x0200;
 }
 
 void
@@ -171,10 +179,18 @@ consputc(int c)
       ;
   }
 
-  if(c == BACKSPACE){
-    uartputc('\b'); uartputc(' '); uartputc('\b');
-  } else
-    uartputc(c);
+  switch (c) {
+    case BACKSPACE:
+      uartputc('\b');
+      uartputc(' ');
+      uartputc('\b');
+      break;
+
+    default:
+      uartputc(c);
+      break;
+  }
+
   cgaputc(c);
 }
 
@@ -211,6 +227,12 @@ consoleintr(int (*getc)(void))
       if(input.e != input.w){
         input.e--;
         consputc(BACKSPACE);
+      }
+      break;
+    case KEY_LF:
+      if(input.e != input.w){
+        input.e--;
+        consputc(c);
       }
       break;
     default:
@@ -296,4 +318,3 @@ consoleinit(void)
 
   ioapicenable(IRQ_KBD, 0);
 }
-

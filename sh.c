@@ -154,8 +154,7 @@ main(void)
       break;
     }
   }
-  //Introduce Ourselves
-  printf(1,"Improved by Iman Karimi, Mohammad Ali Sadraei, Mohammad Hossein Fatemi\n");
+
   // Read and run input commands.
   while(getcmd(buf, sizeof(buf)) >= 0){
     if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' '){
