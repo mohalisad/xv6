@@ -146,12 +146,11 @@ cgaputc(int c)
   else if(c == BACKSPACE){
     if(pos > 0) --pos;
   } else if(c == KEY_RT)
-      pos++;
+    pos++;
   else if(c == KEY_LF)
     pos--;
-  else if(c != KEY_RT && c != KEY_LF)
-    crt[pos++] = (c&0xff) | 0x0200;  // green on white;)
-  else pos--;
+  else
+    crt[pos++] = (c&0xff) | 0x0500;  // green on white;)
 
   if(pos < 0 || pos > 25*80)
     panic("pos under/overflow");
@@ -167,7 +166,7 @@ cgaputc(int c)
   outb(CRTPORT, 15);
   outb(CRTPORT+1, pos);
   if(c != KEY_LF && c != KEY_RT)
-      crt[pos] = ' ' | 0x0200;
+      crt[pos] = ' ' | 0x0500;
 }
 
 void

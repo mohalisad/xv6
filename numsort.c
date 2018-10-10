@@ -11,27 +11,27 @@
 char buf[250];
 
 int str2int(char* inp);
-void int2str(int input,char* output);
 int get_next_int(int fd);
-void print_int(int fd,int num);
-void sort_iarray(int* a);
+void sort_iarray(int* a, int count);
 void swap_in_iarray(int* arr,int i,int j);
-void swap_in_carray(char* arr,int i,int j);
 
-int main(void){
+int main(int argc, char *argv[]){
   int a[COUNTS];
   int i;
   int file;
-  write(STDOUT,"The program pid is:",19);
-  print_int(STDOUT,getpid());
-  for(i=0;i<COUNTS;i++){
-    a[i] = get_next_int(STDIN);
+  printf(STDOUT, "The program pid is: %d\n", getpid());
+  if(argc != 1 && argc != 6){
+    printf(STDOUT, "wrong input count\n");
+    exit();
   }
-  sort_iarray(a);
+
+  for(i=0;i<COUNTS;i++)
+    a[i] = (argc == 1) ? get_next_int(STDIN) : str2int(argv[i + 1]);
+  sort_iarray(a, COUNTS);
   unlink(FILENAME);
   file = open(FILENAME,O_CREATE|O_WRONLY);
   for(i=0;i<COUNTS;i++)
-    print_int(file,a[i]);
+    printf(file, "%d\n", a[i]);
   close(file);
   exit();
 }
@@ -51,52 +51,20 @@ int str2int(char* input){
   return negative?-number:number;
 }
 
-void int2str(int input,char* output){
-  int neg = (input<0);
-  int pointer = 0;
-  int i;
-  input = neg?-input:input;
-  while (1) {
-    output[pointer++] = input%10 + '0';
-    input/=10;
-    if(input == 0){
-      if(neg)
-        output[pointer++] = '-';
-      output[pointer--] = '\0';
-      break;
-    }
-  }
-  for(i=0;i<(pointer+1)/2;i++){
-    swap_in_carray(output,i,pointer-i);
-  }
-}
-
 int get_next_int(int fd){
   read(fd,buf,250);
   return str2int(buf);
 }
 
-void print_int(int fd,int num){
-  int2str(num,buf);
-  write(fd,buf,strlen(buf));
-  write(fd,"\n",1);
-}
-
-void sort_iarray(int* a){
+void sort_iarray(int* a, int count){
   int i,j;
-  for(i=0;i<COUNTS;i++)
-    for(j=0;j<COUNTS-i-1;j++)
+  for(i=0;i<count;i++)
+    for(j=0;j<count-i-1;j++)
       if(a[j]>a[j+1])
         swap_in_iarray(a,j,j+1);
 }
 
 void swap_in_iarray(int* arr,int i,int j){
-  arr[j] = arr[i] ^ arr[j];
-  arr[i] = arr[i] ^ arr[j];
-  arr[j] = arr[i] ^ arr[j];
-}
-
-void swap_in_carray(char* arr,int i,int j){
   arr[j] = arr[i] ^ arr[j];
   arr[i] = arr[i] ^ arr[j];
   arr[j] = arr[i] ^ arr[j];
