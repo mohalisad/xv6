@@ -145,6 +145,7 @@ struct taskstate {
 };
 
 // Gate descriptors for interrupts and traps
+//!TODO
 struct gatedesc {
   uint off_15_0 : 16;   // low 16 bits of offset in segment
   uint cs : 16;         // code segment selector
