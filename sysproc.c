@@ -89,3 +89,12 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+//!TODO We need to change that somehow :|
+int sys_inc_num(void){
+    int num;
+    if(argint(0, &num) < 0)
+      return -1;
+    cprintf("%d",num);
+    return num;
+}
