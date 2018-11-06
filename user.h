@@ -26,6 +26,10 @@ int sleep(int);
 int uptime(void);
 //!TODO
 int inc_num(int);
+int invoked_syscalls(int);
+int sort_syscalls(int);
+int get_count(int,int);
+int log_syscalls();
 
 // ulib.c
 int stat(const char*, struct stat*);

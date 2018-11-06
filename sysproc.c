@@ -90,6 +90,7 @@ sys_uptime(void)
   return xticks;
 }
 
+//!TODO
 //!TODO We need to change that somehow :|
 int sys_inc_num(void){
     int num;
@@ -97,4 +98,16 @@ int sys_inc_num(void){
       return -1;
     cprintf("%d",num);
     return num;
+}
+int sys_invoked_syscalls(void){
+    return 0;
+}
+int sys_sort_syscalls(void){
+    return 0;
+}
+int sys_get_count(void){
+    return 0;
+}
+int sys_log_syscalls(void){
+    return 0;
 }
