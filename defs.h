@@ -123,11 +123,11 @@ int             wait(void);
 void            wakeup(void*);
 void            yield(void);
 //sclog.c
-struct          sccalls;
 struct          sclog;
 struct sclog*   create_sclogs();
 void            call_sc(int sid,struct sclog* sclogs);
 void            print_sclogs_by_pid(int pid);
+void            sort_sclogs_by_pid(int pid);
 // swtch.S
 void            swtch(struct context**, struct context*);
 

@@ -126,7 +126,8 @@ void add_sclog(int sid,struct sclog* sclogs){
     s = &(sclogs[len_sclogs(sclogs)]);
     s->scid = sid;
     s->callcount = 0;
-    s->calls = (struct sccalls *)kalloc();
+    s->calls = kalloc();
+    s->newcall = s->calls;
 }
 int argcounter(int* args){
     if(args == type1||args == type2||args == type3||args == type4)
@@ -135,63 +136,134 @@ int argcounter(int* args){
         return 3;
     return 2;
 }
+int fixstr(char* dst,char* src,int n){
+    int i;
+    for(i=0;i<n;i++){
+        if(dst[i] == 0)break;
+        dst[i] = src[i];
+    }
+    dst[i] = 0;
+    return i;
+}
+int lenofstr(char* src){
+    int i;
+    for(i=0;;i++){
+        if(src[i] == 0)break;
+    }
+    return i;
+}
 void call_sc(int sid,struct sclog* sclogs) {
-    struct sclog *s;
-    int i,p;
+    struct sclog *log;
+    int i,p,n;
     int argcount;
+    char *temp;
     p = find_sclog(sid,sclogs);
     if (p == -1){
         add_sclog(sid,sclogs);
         p = find_sclog(sid,sclogs);
     }
-    s = &(sclogs[p]);
-    cmostime(&(s->calls->calltimes[s->callcount]));
+    log = &(sclogs[p]);
+    cmostime((struct rtcdate*)log->newcall);
+    log->newcall += sizeof(struct rtcdate);
     argcount = argcounter(syscall_args[sid]);
     if(syscall_args[sid][0] != VOID){
-        for (i = 0;i<argcount;i++){
-            argint(i,&(s->calls->args[s->callcount][i]));
-        }
-    }
-    s->callcount++;
-}
-void print_sclogs(struct sclog* sclogs){
-    int i,j,k,len,len2,scid;
-    len = len_sclogs(sclogs);
-    for(i=0;i<len;i++){
-        scid = sclogs[i].scid;
-        cprintf("%d %s(",scid,syscall_names[scid]);
-        len2 =  argcounter(syscall_args[scid]);
-        for(j=0;j<len2;j++){
-            if(j != 0)cprintf(",");
-            cprintf("%s",type_names[syscall_args[scid][j]]);
-        }
-        cprintf(")\n");
-        if(syscall_args[scid][0] != VOID){
-            for(j=0;j<sclogs[i].callcount;j++){
-                cprintf("(");
-                for(k=0;k<len2;k++){
-                    if(k != 0)cprintf(",");
-                    cprintf("%d",sclogs[i].calls->args[j][k]);
-                }
-                cprintf(")\n");
+        for (i = 0;i<argcount;i++){//
+            switch (syscall_args[sid][i]) {
+                case CHARSS:
+                case INTS:
+                case STATS:
+                case SHORT:
+                case INT:
+                    argint(i,(int*)log->newcall);
+                    log->newcall += sizeof(int);
+                    break;
+                case VOIDS:
+                case CVOIDS:
+                    argint(2, &n);
+                    argptr(i,&temp,n);
+                    n = fixstr(log->newcall,temp,n);
+                    log->newcall += (n+1)*sizeof(char);
+                    break;
+                case CHARS:
+                case CCHARS:
+                    n = argstr(i,&temp);
+                    memmove(log->newcall,temp,n+1);
+                    log->newcall += (n+1)*sizeof(char);
+                    break;
             }
         }
     }
+    log->callcount++;
 }
+void print_func_disc(struct sclog* log){
+    int i,argcount,scid;
+    scid = log->scid;
+    argcount = argcounter(syscall_args[scid]);
+    cprintf("%d %s(",scid,syscall_names[scid]);
+    for(i=0;i<argcount;i++){
+        if(i != 0)cprintf(",");
+        cprintf("%s",type_names[syscall_args[scid][i]]);
+    }
+    cprintf(") count:%d\n",log->callcount);
+}
+void print_func_calls(struct sclog* log){
+    int i,j,argcount,scid,n;
+    void *call;
+    struct rtcdate *t;
+    scid = log->scid;
+    argcount = argcounter(syscall_args[scid]);
+    call = log->calls;
+    for(i=0;i<log->callcount;i++){
+        t = call;
+        cprintf("  %d-%d-%d %d:%d:%d",t->year,t->month,t->day,t->hour,t->minute,t->minute);
+        call += sizeof(struct rtcdate);
+        cprintf("(");
+        for(j=0;j<argcount;j++){
+            if(j != 0)cprintf(",");
+            switch (syscall_args[scid][j]) {
+                case CHARSS:
+                case INTS:
+                case STATS:
+                case SHORT:
+                case INT:
+                    cprintf("%d",*((int*)call));
+                    call += sizeof(int);
+                    break;
+                case VOIDS:
+                case CVOIDS:
+                case CHARS:
+                case CCHARS:
+                    cprintf("\"%s\"",((char*)call));
+                    n = lenofstr(call);
+                    call += (n+1)*sizeof(char);
+                    break;
+            }
+        }
+        cprintf(")\n");
+    }
+}
+void print_sclogs(struct sclog* sclogs){
+    int i,len;
+    len = len_sclogs(sclogs);
+    for(i=0;i<len;i++){
+        print_func_disc(&(sclogs[i]));
+        if(syscall_args[sclogs[i].scid][0] != VOID)
+            print_func_calls(&(sclogs[i]));
+    }
+}
+
 void print_sclogs_by_pid(int pid){
     struct sclog *logs;
     if((logs = get_proclog_by_id(pid))){
         print_sclogs(logs);
     }else cprintf("There is no process with %d pid\n",pid);
 }
-/*
 
-
-void xor_sclogs(sclog *res,sclog *second){
+void xor_sclogs(struct sclog *res,struct sclog *second){
     int n;
     char *dst;
     char *src;
-    n = sizeof(sclog);
+    n = sizeof(struct sclog);
     dst = (char*)res;
     src = (char*)second;
     while(n-- > 0){
@@ -201,24 +273,24 @@ void xor_sclogs(sclog *res,sclog *second){
     }
 }
 
-void swap_sclogs(sclog *first,sclog *second){
+void swap_sclogs(struct sclog *first,struct sclog *second){
     xor_sclogs(first,second);
     xor_sclogs(second,first);
     xor_sclogs(first,second);
 }
 
-void sort_sclogs(sclog *sclogs){
+void sort_sclogs(struct sclog *sclogs){
     int i,j,count;
     count = len_sclogs(sclogs);
     for(i=0;i<count;i++)
       for(j=0;j<count-i-1;j++)
-        if(sclogs[j]>sclogs[j+1])
-          swap_sclogs(&(a[j]),&(a[j+1]));
+        if(sclogs[j].scid>sclogs[j+1].scid)
+          swap_sclogs(&(sclogs[j]),&(sclogs[j+1]));
 }
 
-
-
-
-
-
-*/
+void sort_sclogs_by_pid(int pid){
+    struct sclog *logs;
+    if((logs = get_proclog_by_id(pid))){
+        sort_sclogs(logs);
+    }else cprintf("There is no process with %d pid\n",pid);
+}

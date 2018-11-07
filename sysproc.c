@@ -107,6 +107,10 @@ int sys_invoked_syscalls(void){
     return 0;
 }
 int sys_sort_syscalls(void){
+    int num;
+    if(argint(0, &num) < 0)
+      return -1;
+    sort_sclogs_by_pid(num);
     return 0;
 }
 int sys_get_count(void){

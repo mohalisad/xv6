@@ -16,12 +16,9 @@ void sort_iarray(int* a, int count);
 void swap_in_iarray(int* arr,int i,int j);
 
 int main(int argc, char *argv[]){
-  // int a[COUNTS];
-  // int i;
-  // int file;
-  printf(STDOUT, "The program pid is: %d\n", getpid());
-  invoked_syscalls(getpid());
-  /*
+  int a[COUNTS];
+  int i;
+  int file;
   if(argc != 1 && argc != 6){
     printf(STDOUT, "wrong input count\n");
     exit();
@@ -35,7 +32,6 @@ int main(int argc, char *argv[]){
   for(i=0;i<COUNTS;i++)
     printf(file, "%d\n", a[i]);
   close(file);
-  */
   exit();
 }
 
