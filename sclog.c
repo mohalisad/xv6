@@ -163,7 +163,7 @@ void add_sclog(int sid,struct sclog* sclogs){
 int argcounter(int* args){
     if(args == type1||args == type2||args == type3||args == type4)
         return 1;
-    if(args == type8||args == type5)
+    if(args == type8||args == type5||args == type12)
         return 3;
     return 2;
 }
