@@ -100,6 +100,10 @@ int sys_inc_num(void){
     return num;
 }
 int sys_invoked_syscalls(void){
+    int num;
+    if(argint(0, &num) < 0)
+      return -1;
+    print_sclogs_by_pid(num);
     return 0;
 }
 int sys_sort_syscalls(void){

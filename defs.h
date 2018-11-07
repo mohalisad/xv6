@@ -5,6 +5,7 @@ struct inode;
 struct pipe;
 struct proc;
 struct rtcdate;
+struct sclog;
 struct spinlock;
 struct sleeplock;
 struct stat;
@@ -108,6 +109,7 @@ void            exit(void);
 int             fork(void);
 int             growproc(int);
 int             kill(int);
+struct sclog*   get_proclog_by_id(int pid);
 struct cpu*     mycpu(void);
 struct proc*    myproc();
 void            pinit(void);
@@ -120,7 +122,12 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
-
+//sclog.c
+struct          sccalls;
+struct          sclog;
+struct sclog*   create_sclogs();
+void            call_sc(int sid,struct sclog* sclogs);
+void            print_sclogs_by_pid(int pid);
 // swtch.S
 void            swtch(struct context**, struct context*);
 
