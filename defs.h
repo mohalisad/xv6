@@ -125,9 +125,11 @@ void            yield(void);
 //sclog.c
 struct          sclog;
 struct sclog*   create_sclogs();
-void            call_sc(int sid,struct sclog* sclogs);
+void            call_sc(int pid,int sid,struct sclog* sclogs);
 void            print_sclogs_by_pid(int pid);
 void            sort_sclogs_by_pid(int pid);
+int             get_callcount(int pid,int scid);
+void            print_gllog();
 // swtch.S
 void            swtch(struct context**, struct context*);
 

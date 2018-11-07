@@ -114,8 +114,12 @@ int sys_sort_syscalls(void){
     return 0;
 }
 int sys_get_count(void){
-    return 0;
+    int num,num2;
+    if(argint(0, &num) <0||argint(1, &num2)< 0)
+      return -1;
+    return get_callcount(num,num2);
 }
 int sys_log_syscalls(void){
+    print_gllog();
     return 0;
 }

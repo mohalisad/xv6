@@ -1,17 +1,15 @@
-#include "date.h"
-/*
-struct sccalls{
-    struct rtcdate calltimes[100];
-    int args[100][3];
-};
-*/
+typedef void* logdata;
 struct sclog{
     int scid;
-    void *calls;
-    void *newcall;
+    logdata calls;
+    logdata lcalls;
+    logdata newcall;
     int callcount;
 };
+
 struct sclog* create_sclogs();
-void call_sc(int sid,struct sclog* sclogs);
+void call_sc(int pid,int sid,struct sclog* sclogs);
 void print_sclogs_by_pid(int pid);
 void sort_sclogs_by_pid(int pid);
+int get_callcount(int pid,int scid);
+void print_gllog();
