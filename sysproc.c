@@ -96,7 +96,7 @@ int sys_inc_num(void){
     int num;
     if(argint(0, &num) < 0)
       return -1;
-    cprintf("%d",num);
+    cprintf("%d\n",num);
     return num;
 }
 int sys_invoked_syscalls(void){

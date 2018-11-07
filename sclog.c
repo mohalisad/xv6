@@ -1,6 +1,58 @@
 #include "sclog.h"
-#include "defs.h"
 #include "syscall.h"
+
+#define VOID   0
+#define INT    1
+#define INTS   2
+#define CVOIDS 3
+#define VOIDS  4
+#define CHARS  5
+#define CHARSS 6
+#define CCHARS 7
+#define SHORT  8
+#define STSATS 9
+
+static char *type_names[] = {
+    [VOID]   "void",
+    [INT]    "int",
+    [INTS]   "int*",
+    [CVOIDS] "const void*",
+    [VOIDS]  "void*",
+    [CHARS]  "char*",
+    [CHARSS] "char**",
+    [CCHARS] "const char*",
+    [SHORT]  "short",
+    [STSATS] "struct stat*",
+};
+
+static int *syscall_args[] = {
+    [SYS_fork]    {VOID},
+    [SYS_exit]    {VOID},
+    [SYS_wait]    {VOID},
+    [SYS_pipe]    {INTS},
+    [SYS_read]    {INT,CVOIDS,INT},
+    [SYS_kill]    {INT},
+    [SYS_exec]    {CHARS,CHARSS},
+    [SYS_fstat]   {INT,STATS},
+    [SYS_chdir]   {CCHARS},
+    [SYS_dup]     {INT},
+    [SYS_getpid]  {VOID},
+    [SYS_sbrk]    {INT},
+    [SYS_sleep]   {INT},
+    [SYS_uptime]  {VOID},
+    [SYS_open]    {CCHARS,INT},
+    [SYS_write]   {INT,CVOIDS,INT},
+    [SYS_mknod]   {CCHARS,SHORT,SHORT},
+    [SYS_unlink]  {CCHARS},
+    [SYS_link]    {CCHARS,CCHARS},
+    [SYS_mkdir]   {CCHARS},
+    [SYS_close]   {INT},
+    [SYS_inc_num]          {INT},
+    [SYS_invoked_syscalls] {INT},
+    [SYS_sort_syscalls]    {INT},
+    [SYS_get_count]        {INT,INT},
+    [SYS_log_syscalls]     {VOID},
+};
 
 static char *syscall_names[] = {
     [SYS_fork]    "sys_fork",
@@ -75,11 +127,65 @@ void sort_sclogs(sclog *sclogs){
           swap_sclogs(&(a[j]),&(a[j+1]));
 }
 
-int find_sclog(sclog *sclogs,int scid){
+int find_sclog(int scid,sclog *sclogs){
     int i;
     for (i = 0;;i++)
         if(sclogs[i].scid == scid)
             return i;
         if(sclogs[i].scid == -1)
             return -1;
+}
+
+void add_sclog(int sid,sclog* sclogs){
+    struct sclog *s;
+    sclogs[len_sclogs(sclogs)+1].scid = -1;
+    s = &(sclogs[len_sclogs(sclogs)]);
+    s->scid = sid;
+    s->callcount = 0;
+    s->calls = kalloc();
+}
+
+void call_sc(int sid,s->callcount) {
+    struct sclog *s;
+    int i,p;
+    int argcount;
+    p = find_sclog(sid,sclogs);
+    if (p == -1){
+        add_sclog(sid,sclogs);
+        p = find_sclog(sid,sclogs);
+    }
+    s = &(sclogs[p]);
+    cmostime(&(s->calls->calltimes[s->callcount]));
+    argcount = NELEM(syscall_args[sid]);
+    if(syscalls_args[0] != VOID){
+        for (i = 0;i<argcount;i++){
+            argint(i,&(s->calls->args[s->callcount][i]));
+        }
+    }
+    s->callcount++;
+}
+
+void print_sclogs(sclog* sclogs){
+    int i,j,k,len,len2,scid;
+    len = len_sclogs(sclogs);
+    for(i=0;i<len;i++){
+        scid = sclogs[i]->scid;
+        cprintf("%d %s(",scid,syscall_names[scid]);
+        len2 =  NELEM(syscall_args[scid]);
+        for(j=0;j<len2,j++){
+            if(j != 0)cprintf(",");
+            cprintf("%s",type_names[syscall_args[scid][j]]);
+        }
+        cprintf(")\n");
+        if(syscall_args[scid][0] != VOID){
+            for(j=0;j<sclogs[i]->callcount,j++){
+                cprintf("(");
+                for(k=0;k<len2;k++){
+                    if(k != 0)cprintf(",");
+                    cprintf("%d",sclogs[i]->calls->args[j][k]);
+                }
+                cprintf(")\n");
+            }
+        }
+    }
 }
