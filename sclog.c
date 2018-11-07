@@ -4,8 +4,9 @@
 #include "syscall.h"
 #include "date.h"
 
-char gllogs[100000];
-char *endgllog = 0;
+logdata fgllog,mgllog,egllog = 0;
+
+#define PAGESIZE 4000
 
 #define VOID   0
 #define INT    1
@@ -29,13 +30,14 @@ static int type8[]  = {CCHARS,SHORT,SHORT};
 static int type9[]  = {CCHARS,INT};
 static int type10[] = {CHARS,CHARSS};
 static int type11[] = {INT,STATS};
+static int type12[] = {INT,VOIDS,INT};
 
 static int* syscall_args[] = {
     [SYS_fork]    type1,
     [SYS_exit]    type1,
     [SYS_wait]    type1,
     [SYS_pipe]    type2,
-    [SYS_read]    type5,
+    [SYS_read]    type12,
     [SYS_kill]    type3,
     [SYS_exec]    type10,
     [SYS_fstat]   type11,
@@ -123,9 +125,22 @@ int find_sclog(int scid,struct sclog *sclogs){
     }
 }
 void init_logdata(logdata *first,logdata *end){
-    *first  = kalloc();
+    *first = kalloc();
     *(logdata*)*first = 0;
-    *end    = *first + sizeof(logdata);
+    *end = *first + sizeof(logdata);
+}
+void fix_logdata(logdata *mid,logdata *end){
+    logdata temp;
+    if(*end - *mid > PAGESIZE){
+        temp = *mid;
+        if((*(logdata*)temp)==0){
+            init_logdata(mid,end);
+        }else{
+            *mid = *(logdata*)temp;
+            *end = *mid + sizeof(logdata);
+        }
+        *(logdata*)temp = *mid;
+    }
 }
 void add_sclog(int sid,struct sclog* sclogs){
     struct sclog *s;
@@ -168,6 +183,7 @@ logdata add_call(logdata endlog,int sid){
     if(syscall_args[sid][0] != VOID){
         for (i = 0;i<argcount;i++){
             switch (syscall_args[sid][i]) {
+                case VOIDS:
                 case CHARSS:
                 case INTS:
                 case STATS:
@@ -176,7 +192,6 @@ logdata add_call(logdata endlog,int sid){
                     argint(i,(int*)endlog);
                     endlog += sizeof(int);
                     break;
-                case VOIDS:
                 case CVOIDS:
                     argint(2, &n);
                     argptr(i,&temp,n);
@@ -195,17 +210,19 @@ logdata add_call(logdata endlog,int sid){
     return endlog;
 }
 void add_to_gllogs(int pid,int sid){
-    if(endgllog == 0)
-        endgllog = gllogs;
-    *(int*)endgllog = pid;
-    endgllog += sizeof(int);
-    *(int*)endgllog = sid;
-    endgllog += sizeof(int);
-    endgllog = add_call(endgllog,sid);
+    if(egllog == 0){
+        init_logdata(&fgllog,&egllog);
+        mgllog = fgllog;
+    }
+    *(int*)egllog = pid;
+    egllog += sizeof(int);
+    *(int*)egllog = sid;
+    egllog += sizeof(int);
+    egllog = add_call(egllog,sid);
+    fix_logdata(&mgllog,&egllog);
 }
 void call_sc(int pid,int sid,struct sclog* sclogs) {
     struct sclog *log;
-    logdata temp;
     int p;
     p = find_sclog(sid,sclogs);
     if (p == -1){
@@ -214,11 +231,7 @@ void call_sc(int pid,int sid,struct sclog* sclogs) {
     }
     log = &(sclogs[p]);
     log->newcall = add_call(log->newcall,sid);
-    if(log->newcall - log->lcalls > 4000){
-        temp = log->lcalls;
-        init_logdata(&(log->lcalls),&(log->newcall));
-        *(logdata*)temp = log->lcalls;
-    }
+    fix_logdata(&(log->lcalls),&(log->newcall));
     log->callcount++;
     add_to_gllogs(pid,sid);
 }
@@ -246,6 +259,7 @@ logdata print_call(logdata call,int scid){
     for(i=0;i<argcount;i++){
         if(i != 0)cprintf(",");
         switch (syscall_args[scid][i]) {
+            case VOIDS:
             case CHARSS:
             case INTS:
             case STATS:
@@ -254,7 +268,6 @@ logdata print_call(logdata call,int scid){
                 cprintf("%d",*((int*)call));
                 call += sizeof(int);
                 break;
-            case VOIDS:
             case CVOIDS:
             case CHARS:
             case CCHARS:
@@ -269,12 +282,14 @@ logdata print_call(logdata call,int scid){
 }
 void print_func_calls(struct sclog* log){
     int i;
-    void *call;
+    logdata call,mid;
+    mid  = log->calls;
     call = log->calls + sizeof(logdata);
     for(i=0;i<log->callcount;i++){
         cprintf("  ");
         call = print_time(call);
         call = print_call(call,log->scid);
+        fix_logdata(&mid,&call);
     }
 }
 void print_sclog(struct sclog* sclog){
@@ -297,9 +312,10 @@ void print_sclogs_by_pid(int pid){
 }
 void print_gllog(){
     int sid;
-    void *call;
-    call = gllogs;
-    while(call<(void*)endgllog){
+    logdata call,mid;
+    mid  = fgllog;
+    call = fgllog + sizeof(logdata);
+    while(call!=egllog){
         cprintf("pid:%d ",*(int*)call);
         call += sizeof(int);
         sid = *(int*)call;
@@ -308,6 +324,7 @@ void print_gllog(){
         call = print_time(call);
         cprintf(" %s",syscall_names[sid]);
         call = print_call(call,sid);
+        fix_logdata(&mid,&call);
     }
 }
 void xor_sclogs(struct sclog *res,struct sclog *second){
