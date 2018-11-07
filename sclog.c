@@ -124,6 +124,15 @@ int find_sclog(int scid,struct sclog *sclogs){
             return -1;
     }
 }
+int sumcount(struct sclog *sclogs){
+    int i,count;
+    count = 0;
+    for (i = 0;;i++){
+        if(sclogs[i].scid == -1)
+            return count;
+        count += sclogs[i].callcount;
+    }
+}
 void init_logdata(logdata *first,logdata *end){
     *first = kalloc();
     *(logdata*)*first = 0;

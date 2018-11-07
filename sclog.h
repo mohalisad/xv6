@@ -13,3 +13,4 @@ void print_sclogs_by_pid(int pid);
 void sort_sclogs_by_pid(int pid);
 int get_callcount(int pid,int scid);
 void print_gllog();
+int sumcount(struct sclog *sclogs);
