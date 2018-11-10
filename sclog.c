@@ -374,7 +374,7 @@ int get_callcount(int pid,int scid){
         i = find_sclog(scid,logs);
         if(i!=-1){
             return logs[i].callcount;
-        }else cprintf("There is no call of %d\n",scid);
+        }else cprintf("There is no call of %d for %d\n",scid,pid);
     }else cprintf("There is no process with %d pid\n",pid);
     return -1;
 }
