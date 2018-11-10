@@ -303,8 +303,7 @@ void print_func_calls(struct sclog* log){
 }
 void print_sclog(struct sclog* sclog){
     print_func_disc(sclog);
-    if(syscall_args[sclog->scid][0] != VOID)
-        print_func_calls(sclog);
+    print_func_calls(sclog);
 }
 void print_sclogs(struct sclog* sclogs){
     int i,len;

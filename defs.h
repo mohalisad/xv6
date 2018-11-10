@@ -123,7 +123,6 @@ int             wait(void);
 void            wakeup(void*);
 void            yield(void);
 //sclog.c
-struct          sclog;
 struct sclog*   create_sclogs();
 void            call_sc(int pid,int sid,struct sclog* sclogs);
 void            print_sclogs_by_pid(int pid);
