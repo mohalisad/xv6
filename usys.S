@@ -7,7 +7,16 @@
     movl $SYS_ ## name, %eax; \
     int $T_SYSCALL; \
     ret
-//!TODO
+#define SYSCALLR(name) \
+  .globl name; \
+  name: \
+    movl $SYS_ ## name, %eax; \
+    add $4, %esp;  \
+    mov (%esp), %edx; \
+    sub $4, %esp; \
+    int $T_SYSCALL; \
+    ret
+
 SYSCALL(fork)
 SYSCALL(exit)
 SYSCALL(wait)
@@ -29,7 +38,7 @@ SYSCALL(getpid)
 SYSCALL(sbrk)
 SYSCALL(sleep)
 SYSCALL(uptime)
-SYSCALL(inc_num)
+SYSCALLR(inc_num)
 SYSCALL(invoked_syscalls)
 SYSCALL(sort_syscalls)
 SYSCALL(get_count)

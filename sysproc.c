@@ -94,8 +94,7 @@ sys_uptime(void)
 //!TODO We need to change that somehow :|
 int sys_inc_num(void){
     int num;
-    if(argint(0, &num) < 0)
-      return -1;
+    num = myproc()->tf->edx;
     cprintf("%d\n",num + 1);
     return num;
 }
