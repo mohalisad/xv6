@@ -90,8 +90,6 @@ sys_uptime(void)
   return xticks;
 }
 
-//!TODO
-//!TODO We need to change that somehow :|
 int sys_inc_num(void){
     int num;
     num = myproc()->tf->edx;
