@@ -61,6 +61,8 @@ static int* syscall_args[] = {
     [SYS_log_syscalls]     type1,
     [SYS_ticketlockinit]   type1,
     [SYS_ticketlocktest]   type1,
+    [SYS_rwinit]           type1,
+    [SYS_rwtest]           type3,
 };
 static char *type_names[] = {
     [VOID]   "void",
@@ -103,6 +105,8 @@ static char *syscall_names[] = {
     [SYS_log_syscalls]     "sys_log_syscalls",
     [SYS_ticketlockinit]   "sys_ticketlockinit",
     [SYS_ticketlocktest]   "sys_ticketlocktest",
+    [SYS_rwinit]           "sys_rwinit",
+    [SYS_rwtest]           "sys_rwtest",
 };
 
 

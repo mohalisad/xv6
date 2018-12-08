@@ -27,3 +27,5 @@
 #define SYS_log_syscalls     26
 #define SYS_ticketlockinit   27
 #define SYS_ticketlocktest   28
+#define SYS_rwinit           29
+#define SYS_rwtest           30

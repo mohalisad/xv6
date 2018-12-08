@@ -31,6 +31,8 @@ int get_count(int,int);
 int log_syscalls(void);
 int ticketlockinit(void);
 int ticketlocktest(void);
+int rwinit(void);
+int rwtest(int);
 
 // ulib.c
 int stat(const char*, struct stat*);
