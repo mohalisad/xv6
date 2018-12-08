@@ -9,6 +9,7 @@ OBJS = \
 	kalloc.o\
 	kbd.o\
 	lapic.o\
+	locks.o\
 	log.o\
 	main.o\
 	mp.o\

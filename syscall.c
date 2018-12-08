@@ -136,6 +136,8 @@ static int (*syscalls[])(void) = {
 [SYS_sort_syscalls]    sys_sort_syscalls,
 [SYS_get_count]        sys_get_count,
 [SYS_log_syscalls]     sys_log_syscalls,
+[SYS_ticketlockinit]   sys_ticketlockinit,
+[SYS_ticketlocktest]   sys_ticketlocktest,
 };
 
 void

@@ -82,6 +82,10 @@ void            lapicinit(void);
 void            lapicstartap(uchar, uint);
 void            microdelay(int);
 
+// locks.c
+int sys_ticketlockinit();
+int sys_ticketlocktest();
+
 // log.c
 void            initlog(int dev);
 void            log_write(struct buf*);
