@@ -32,7 +32,7 @@ int log_syscalls(void);
 int ticketlockinit(void);
 int ticketlocktest(void);
 int rwinit(void);
-int rwtest(int);
+int rwtest(unsigned int);
 
 // ulib.c
 int stat(const char*, struct stat*);
