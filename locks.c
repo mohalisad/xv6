@@ -16,8 +16,12 @@ int sys_rwtest(){
     uint inp;
     argint(0, (int*)&inp);
     count = convert2bits(inp,bits);
-    if(count>0){
-
+    while(count>=0){
+        if(bits[count--]){
+            //write
+        }else{
+            //read
+        }
     }
     return 0;
 }
@@ -27,11 +31,11 @@ int convert2bits(uint inp,int *bits){
         bits[count++] = inp&1;
         inp /= 2;
     }
-    count--;
+    /*
     for (int i = 0;i<(count+1)/2;i++){
         bits[i]       = bits[i]^bits[count-i];
         bits[count-i] = bits[i]^bits[count-i];
         bits[i]       = bits[i]^bits[count-i];
-    }
-    return count;
+    }*/
+    return count-1;
 }
