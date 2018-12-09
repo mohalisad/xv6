@@ -140,6 +140,8 @@ static int (*syscalls[])(void) = {
 [SYS_ticketlocktest]   sys_ticketlocktest,
 [SYS_rwinit]           sys_rwinit,
 [SYS_rwtest]           sys_rwtest,
+[SYS_rwinit2]          sys_rwinit2,
+[SYS_rwtest2]          sys_rwtest2,
 };
 
 void

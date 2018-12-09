@@ -33,6 +33,8 @@ int ticketlockinit(void);
 int ticketlocktest(void);
 int rwinit(void);
 int rwtest(unsigned int);
+int rwinit2(void);
+int rwtest2(unsigned int);
 
 // ulib.c
 int stat(const char*, struct stat*);

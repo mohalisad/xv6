@@ -87,6 +87,8 @@ int sys_ticketlockinit();
 int sys_ticketlocktest();
 int sys_rwinit();
 int sys_rwtest();
+int sys_rwinit2();
+int sys_rwtest2();
 int convert2bits(uint inp,int *bits);
 
 // log.c

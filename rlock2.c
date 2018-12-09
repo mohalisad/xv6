@@ -10,7 +10,7 @@
 int main(int argc, char *argv[]){
     int pid;
     int i;
-    rwinit();
+    rwinit2();
     pid = fork();
     for(i = 1;i<NCHILED;i++){
         if(pid>0){
@@ -23,7 +23,7 @@ int main(int argc, char *argv[]){
     }
     if(pid == 0){
         //printf(STDOUT,"child adding to shared counter\n");
-        rwtest(i%2 == 0?16:31);
+        rwtest2(i%2 == 0?16:31);
     }else{
         for (i = 0;i<NCHILED;i++)
             wait();
