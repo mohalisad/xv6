@@ -9,6 +9,7 @@
 
 void remove_from_que(struct proc *p);
 void sleep_in_que(struct proc *p);
+void wake_in_que(struct proc *p);
 void add_to_fcfs(struct proc *p);
 void add_to_priority(struct proc *p,int priority);
 void add_to_luck(struct proc *p,int luck);
@@ -571,10 +572,28 @@ void sleep_in_que(struct proc *p){
     }
     if(p->run_mode == LUCK){
         luck_count--;
-        sum_luck -= p->luck;
+        sum_luck -= p->priority;
     }
     p->run_mode = -p->run_mode;
     release(&ptable.lock);
+}
+void wake_in_que(struct proc *p){
+    int run_mode;
+    if(p->run_mode == NO_QUE)
+        panic("in no que");
+    run_mode = -p->run_mode;
+    p->run_mode = NO_QUE;
+    switch (run_mode) {
+        case FCFS:
+            add_to_fcfs(p);
+            break;
+        case PRIORITY:
+            add_to_priority(p,p->priority);
+            break;
+        case LUCK:
+            add_to_luck(p,p->priority);
+            break;
+    }
 }
 void add_to_fcfs(struct proc *p){
     if(p->run_mode != NO_QUE)
@@ -590,11 +609,11 @@ void add_to_priority(struct proc *p,int priority){
     acquire(&ptable.lock);
     p->run_mode = PRIORITY;
     p->priority = priority;
-    if(priority_count == 0)
+    if(pr_count == 0)
         min_priority = priority;
     else
         min_priority = (min_priority<priority?min_priority:priority);
-    priority_count++;
+    pr_count++;
     release(&ptable.lock);
 }
 void add_to_luck(struct proc *p,int luck){
@@ -609,11 +628,12 @@ void add_to_luck(struct proc *p,int luck){
 }
 int  calc_min_priority(){
     int retu = 10000;
+    struct proc *p;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
         if(p->state != RUNNABLE)
             continue;
         if(p->run_mode == PRIORITY)
-            retu = (retu<priority?retu:priority);
+            retu = (retu<p->priority?retu:p->priority);
     }
     return retu;
 }
