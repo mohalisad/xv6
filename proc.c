@@ -7,6 +7,18 @@
 #include "proc.h"
 #include "spinlock.h"
 
+void remove_from_que(struct proc *p);
+void sleep_in_que(struct proc *p);
+void add_to_fcfs(struct proc *p);
+void add_to_priority(struct proc *p,int priority);
+void add_to_luck(struct proc *p,int luck);
+int  calc_min_priority();
+int  luck_count = 0;
+int  pr_count   = 0;
+int  fcfs_count = 0;
+int  ctime = 0;
+int  sum_luck = 0,min_priority = 0;
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
@@ -112,6 +124,7 @@ found:
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
   p->logs = create_sclogs();
+  p->ctime = ctime++;
   return p;
 }
 
@@ -230,7 +243,7 @@ exit(void)
   struct proc *curproc = myproc();
   struct proc *p;
   int fd;
-
+  cprintf ("t:%d %d\n",curproc->pid,curproc->ctime);
   if(curproc == initproc)
     panic("init exiting");
 
@@ -540,4 +553,67 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+void remove_from_que(struct proc *p){
+    sleep_in_que(p);
+    p->run_mode = NO_QUE;
+}
+void sleep_in_que(struct proc *p){
+    if(p->run_mode == NO_QUE)
+        panic("in no que");
+    acquire(&ptable.lock);
+    if(p->run_mode == FCFS){
+        fcfs_count--;
+    }
+    if(p->run_mode == PRIORITY){
+        pr_count--;
+        min_priority = (pr_count==0 ? 0:calc_min_priority());
+    }
+    if(p->run_mode == LUCK){
+        luck_count--;
+        sum_luck -= p->luck;
+    }
+    p->run_mode = -p->run_mode;
+    release(&ptable.lock);
+}
+void add_to_fcfs(struct proc *p){
+    if(p->run_mode != NO_QUE)
+        panic("already in another que");
+    acquire(&ptable.lock);
+    p->run_mode = FCFS;
+    fcfs_count++;
+    release(&ptable.lock);
+}
+void add_to_priority(struct proc *p,int priority){
+    if(p->run_mode != NO_QUE)
+        panic("already in another que");
+    acquire(&ptable.lock);
+    p->run_mode = PRIORITY;
+    p->priority = priority;
+    if(priority_count == 0)
+        min_priority = priority;
+    else
+        min_priority = (min_priority<priority?min_priority:priority);
+    priority_count++;
+    release(&ptable.lock);
+}
+void add_to_luck(struct proc *p,int luck){
+    if(p->run_mode != NO_QUE)
+        panic("already in another que");
+    acquire(&ptable.lock);
+    p->run_mode = LUCK;
+    p->priority = luck;
+    sum_luck += luck;
+    luck_count++;
+    release(&ptable.lock);
+}
+int  calc_min_priority(){
+    int retu = 10000;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+        if(p->state != RUNNABLE)
+            continue;
+        if(p->run_mode == PRIORITY)
+            retu = (retu<priority?retu:priority);
+    }
+    return retu;
 }

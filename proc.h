@@ -1,3 +1,8 @@
+#define NO_QUE    0
+#define FCFS      1
+#define PRIORITY  2
+#define LUCK      3
+
 // Per-CPU state
 struct cpu {
   uchar apicid;                // Local APIC ID
@@ -50,6 +55,9 @@ struct proc {
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
   struct sclog *logs;
+  int ctime;
+  int run_mode;
+  int priority;                // Or Luck valye
 };
 
 // Process memory is laid out contiguously, low addresses first:
