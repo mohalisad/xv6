@@ -14,11 +14,13 @@ void add_to_fcfs(struct proc *p);
 void add_to_priority(struct proc *p,int priority);
 void add_to_luck(struct proc *p,int luck);
 int  calc_min_priority();
+int  rand(int mod);
 int  luck_count = 0;
 int  pr_count   = 0;
 int  fcfs_count = 0;
 int  ctime = 0;
 int  sum_luck = 0,min_priority = 0;
+unsigned long randstate = 1;
 
 struct {
   struct spinlock lock;
@@ -125,6 +127,8 @@ found:
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
   p->logs = create_sclogs();
+  p->run_mode = NO_QUE;
+  add_to_luck(p,10);
   p->ctime = ctime++;
   return p;
 }
@@ -244,7 +248,6 @@ exit(void)
   struct proc *curproc = myproc();
   struct proc *p;
   int fd;
-  cprintf ("t:%d %d\n",curproc->pid,curproc->ctime);
   if(curproc == initproc)
     panic("init exiting");
 
@@ -260,7 +263,7 @@ exit(void)
   iput(curproc->cwd);
   end_op();
   curproc->cwd = 0;
-
+  remove_from_que(curproc);
   acquire(&ptable.lock);
 
   // Parent might be sleeping in wait().
@@ -443,6 +446,7 @@ sleep(void *chan, struct spinlock *lk)
   // (wakeup runs with ptable.lock locked),
   // so it's okay to release lk.
   if(lk != &ptable.lock){  //DOC: sleeplock0
+    sleep_in_que(p);
     acquire(&ptable.lock);  //DOC: sleeplock1
     if(lk != 0)release(lk);
   }
@@ -471,8 +475,12 @@ wakeup1(void *chan)
   struct proc *p;
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-    if(p->state == SLEEPING && p->chan == chan)
+    if(p->state == SLEEPING && p->chan == chan){
+      release(&ptable.lock);
+      wake_in_que(p);
+      acquire(&ptable.lock);
       p->state = RUNNABLE;
+    }
 }
 
 // Wake up all processes sleeping on chan.
@@ -636,4 +644,9 @@ int  calc_min_priority(){
             retu = (retu<p->priority?retu:p->priority);
     }
     return retu;
+}
+
+int rand(int mod){
+  randstate = randstate * 1664525 + 1013904223;
+  return randstate%mod;
 }
