@@ -6,6 +6,8 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#define MIN(x,y) (((x)>(y))?(y):(x))
+#define MAX_RAND 10000
 
 void remove_from_que(struct proc *p);
 void sleep_in_que(struct proc *p);
@@ -14,13 +16,14 @@ void add_to_fcfs(struct proc *p);
 void add_to_priority(struct proc *p,int priority);
 void add_to_luck(struct proc *p,int luck);
 int  calc_min_priority();
-int  rand(int mod);
+int  calc_min_fcfs();
+int  myrand(int mod);
 int  luck_count = 0;
 int  pr_count   = 0;
 int  fcfs_count = 0;
 int  ctime = 0;
-int  sum_luck = 0,min_priority = 0;
-unsigned long randstate = 1;
+int  sum_luck = 0,min_priority = 0,min_fcfs = 0;
+int  randstate = 1;
 
 struct {
   struct spinlock lock;
@@ -90,9 +93,9 @@ allocproc(void)
 {
   struct proc *p;
   char *sp;
-
+    cprintf("alocated\n");
   acquire(&ptable.lock);
-
+  cprintf("alocated2\n");
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->state == UNUSED)
       goto found;
@@ -341,30 +344,39 @@ scheduler(void)
 {
   struct proc *p;
   struct cpu *c = mycpu();
+  int luck_total = 0,luck_random;
   c->proc = 0;
 
   for(;;){
     // Enable interrupts on this processor.
     sti();
-
+    luck_total = 0;
+    luck_random = myrand(sum_luck);
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
-
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
+      if(p->run_mode == LUCK)
+        luck_total += p->priority;
+      if(pr_count>0){
+          if(p->run_mode == PRIORITY)
+              if(p->priority != min_priority)
+                continue;
+      }else if(fcfs_count>0){
+          if(p->run_mode == FCFS)
+              if(p->priority != min_fcfs)
+                continue;
+      }else if(luck_count>0){
+          if(p->run_mode == LUCK)
+              if(!(luck_total >luck_random && luck_random>=luck_total-p->priority))
+                continue;
+      }
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
-
       swtch(&(c->scheduler), p->context);
       switchkvm();
-
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
       c->proc = 0;
     }
     release(&ptable.lock);
@@ -573,6 +585,7 @@ void sleep_in_que(struct proc *p){
     acquire(&ptable.lock);
     if(p->run_mode == FCFS){
         fcfs_count--;
+        min_priority = (fcfs_count==0 ? 0:calc_min_fcfs());
     }
     if(p->run_mode == PRIORITY){
         pr_count--;
@@ -608,6 +621,10 @@ void add_to_fcfs(struct proc *p){
         panic("already in another que");
     acquire(&ptable.lock);
     p->run_mode = FCFS;
+    if(fcfs_count == 0)
+        min_fcfs = p->pid;
+    else
+        min_fcfs = MIN(p->pid,min_fcfs);
     fcfs_count++;
     release(&ptable.lock);
 }
@@ -620,13 +637,14 @@ void add_to_priority(struct proc *p,int priority){
     if(pr_count == 0)
         min_priority = priority;
     else
-        min_priority = (min_priority<priority?min_priority:priority);
+        min_priority = MIN(min_priority,priority);
     pr_count++;
     release(&ptable.lock);
 }
 void add_to_luck(struct proc *p,int luck){
     if(p->run_mode != NO_QUE)
         panic("already in another que");
+    cprintf("here\n");
     acquire(&ptable.lock);
     p->run_mode = LUCK;
     p->priority = luck;
@@ -635,18 +653,30 @@ void add_to_luck(struct proc *p,int luck){
     release(&ptable.lock);
 }
 int  calc_min_priority(){
-    int retu = 10000;
+    int retu = 100000;
     struct proc *p;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
         if(p->state != RUNNABLE)
             continue;
         if(p->run_mode == PRIORITY)
-            retu = (retu<p->priority?retu:p->priority);
+            retu = MIN(retu,p->priority);
+    }
+    return retu;
+}
+int  calc_min_fcfs(){
+    int retu = 100000;
+    struct proc *p;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+        if(p->state != RUNNABLE)
+            continue;
+        if(p->run_mode == FCFS)
+            retu = MIN(retu,p->pid);
     }
     return retu;
 }
 
-int rand(int mod){
-  randstate = randstate * 1664525 + 1013904223;
+int myrand(int mod){
+  if(mod == 0)return -1;
+  randstate = (randstate * 645 + 10141)%MAX_RAND;
   return randstate%mod;
 }
