@@ -93,9 +93,7 @@ allocproc(void)
 {
   struct proc *p;
   char *sp;
-    cprintf("alocated\n");
   acquire(&ptable.lock);
-  cprintf("alocated2\n");
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->state == UNUSED)
       goto found;
@@ -581,7 +579,7 @@ void remove_from_que(struct proc *p){
 }
 void sleep_in_que(struct proc *p){
     if(p->run_mode == NO_QUE)
-        panic("in no que");
+        return;
     acquire(&ptable.lock);
     if(p->run_mode == FCFS){
         fcfs_count--;
@@ -601,7 +599,7 @@ void sleep_in_que(struct proc *p){
 void wake_in_que(struct proc *p){
     int run_mode;
     if(p->run_mode == NO_QUE)
-        panic("in no que");
+        return;
     run_mode = -p->run_mode;
     p->run_mode = NO_QUE;
     switch (run_mode) {
@@ -644,7 +642,6 @@ void add_to_priority(struct proc *p,int priority){
 void add_to_luck(struct proc *p,int luck){
     if(p->run_mode != NO_QUE)
         panic("already in another que");
-    cprintf("here\n");
     acquire(&ptable.lock);
     p->run_mode = LUCK;
     p->priority = luck;
