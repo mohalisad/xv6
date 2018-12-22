@@ -7,6 +7,7 @@
 #include "proc.h"
 #include "spinlock.h"
 #define MIN(x,y) (((x)>(y))?(y):(x))
+#define ABS(x)   ((x)<0?(-x):(x))
 
 
 int  sys_uptime(void);
@@ -126,7 +127,7 @@ found:
   p->context->eip = (uint)forkret;
   p->logs = create_sclogs();
   p->run_mode = NO_QUE;
-  //add_to_luck(p,10);
+  add_to_luck(p,10);
   p->ctime = sys_uptime();
   return p;
 }
@@ -261,12 +262,10 @@ exit(void)
   iput(curproc->cwd);
   end_op();
   curproc->cwd = 0;
-  remove_from_que(curproc);
   acquire(&ptable.lock);
 
   // Parent might be sleeping in wait().
   wakeup1(curproc->parent);
-
   // Pass abandoned children to init.
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->parent == curproc){
@@ -275,9 +274,9 @@ exit(void)
         wakeup1(initproc);
     }
   }
-
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
+  remove_from_que(curproc);
   sched();
   panic("zombie exit");
 }
@@ -456,14 +455,13 @@ sleep(void *chan, struct spinlock *lk)
   // (wakeup runs with ptable.lock locked),
   // so it's okay to release lk.
   if(lk != &ptable.lock){  //DOC: sleeplock0
-    sleep_in_que(p);
     acquire(&ptable.lock);  //DOC: sleeplock1
     if(lk != 0)release(lk);
   }
   // Go to sleep.
   p->chan = chan;
   p->state = SLEEPING;
-
+  sleep_in_que(p);
   sched();
 
   // Tidy up.
@@ -486,9 +484,7 @@ wakeup1(void *chan)
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->state == SLEEPING && p->chan == chan){
-      release(&ptable.lock);
       wake_in_que(p);
-      acquire(&ptable.lock);
       p->state = RUNNABLE;
     }
 }
@@ -578,9 +574,11 @@ void remove_from_que(struct proc *p){
     p->run_mode = NO_QUE;
 }
 void sleep_in_que(struct proc *p){
+    int locked = ptable.lock.locked;
     if(p->run_mode == NO_QUE)
         return;
-    acquire(&ptable.lock);
+    if(!locked)
+        acquire(&ptable.lock);
     if(p->run_mode == FCFS){
         fcfs_count--;
         min_fcfs = (fcfs_count==0 ? 0:calc_min_fcfs());
@@ -594,7 +592,8 @@ void sleep_in_que(struct proc *p){
         sum_luck -= p->priority;
     }
     p->run_mode = -p->run_mode;
-    release(&ptable.lock);
+    if(!locked)
+        release(&ptable.lock);
 }
 void wake_in_que(struct proc *p){
     int run_mode;
@@ -615,21 +614,26 @@ void wake_in_que(struct proc *p){
     }
 }
 void add_to_fcfs(struct proc *p){
+    int locked = ptable.lock.locked;
     if(p->run_mode != NO_QUE)
         remove_from_que(p);
-    acquire(&ptable.lock);
+    if(!locked)
+        acquire(&ptable.lock);
     p->run_mode = FCFS;
     if(fcfs_count == 0)
         min_fcfs = p->pid;
     else
         min_fcfs = MIN(p->pid,min_fcfs);
     fcfs_count++;
-    release(&ptable.lock);
+    if(!locked)
+        release(&ptable.lock);
 }
 void add_to_priority(struct proc *p,int priority){
+    int locked = ptable.lock.locked;
     if(p->run_mode != NO_QUE)
         remove_from_que(p);
-    acquire(&ptable.lock);
+    if(!locked)
+        acquire(&ptable.lock);
     p->run_mode = PRIORITY;
     p->priority = priority;
     if(pr_count == 0)
@@ -637,17 +641,21 @@ void add_to_priority(struct proc *p,int priority){
     else
         min_priority = MIN(min_priority,priority);
     pr_count++;
-    release(&ptable.lock);
+    if(!locked)
+        release(&ptable.lock);
 }
 void add_to_luck(struct proc *p,int luck){
+    int locked = ptable.lock.locked;
     if(p->run_mode != NO_QUE)
         remove_from_que(p);
-    acquire(&ptable.lock);
+    if(!locked)
+        acquire(&ptable.lock);
     p->run_mode = LUCK;
     p->priority = luck;
     sum_luck += luck;
     luck_count++;
-    release(&ptable.lock);
+    if(!locked)
+        release(&ptable.lock);
 }
 int  calc_min_priority(){
     int retu = 100000;
@@ -675,6 +683,7 @@ int  calc_min_fcfs(){
 int myrand(int mod){
   if(mod == 0)return -1;
   randstate = (randstate * 645 + 10141);
+  randstate = ABS(randstate);
   return randstate%mod;
 }
 int sys_print_process(void){

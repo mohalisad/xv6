@@ -11,7 +11,7 @@ void mysleep(int loop){
 
 void print_loop(const char* inp){
     for(int i=0;i<5;i++){
-        print_process();
+        //print_process();
         printf(1,"%s\n",inp);
         mysleep(20);
     }
@@ -45,7 +45,7 @@ int main(int argc, char *argv[]){
     }
     if(!fork()){
         sleep(50);
-        set_luck(2);
+        set_luck(50);
         sleep(50);
         print_loop("luck");
     }
