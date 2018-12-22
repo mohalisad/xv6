@@ -31,3 +31,7 @@
 #define SYS_rwtest           30
 #define SYS_rwinit2          31
 #define SYS_rwtest2          32
+#define SYS_set_luck         33
+#define SYS_set_fcfs         34
+#define SYS_set_priority     35
+#define SYS_print_process    36

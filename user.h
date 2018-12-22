@@ -35,6 +35,10 @@ int rwinit(void);
 int rwtest(unsigned int);
 int rwinit2(void);
 int rwtest2(unsigned int);
+int set_luck(int tickets);
+int set_fcfs();
+int set_priority(int priority);
+int print_process();
 
 // ulib.c
 int stat(const char*, struct stat*);

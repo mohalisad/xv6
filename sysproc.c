@@ -120,3 +120,27 @@ int sys_log_syscalls(void){
     print_gllog();
     return 0;
 }
+int sys_set_luck(void){
+    int num;
+    struct proc *curproc = myproc();
+    if(argint(0, &num) < 0)
+      return -1;
+    add_to_luck(curproc,num);
+    return 0;
+}
+int sys_set_fcfs(void){
+    struct proc *curproc = myproc();
+    add_to_fcfs(curproc);
+    return 0;
+}
+int sys_set_priority(void){
+    int num;
+    struct proc *curproc = myproc();
+    if(argint(0, &num) < 0)
+      return -1;
+    add_to_priority(curproc,num);
+    return 0;
+}
+int sys_print_process(void){
+    return 0;
+}

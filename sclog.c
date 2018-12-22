@@ -63,8 +63,12 @@ static int* syscall_args[] = {
     [SYS_ticketlocktest]   type1,
     [SYS_rwinit]           type1,
     [SYS_rwtest]           type3,
-    [SYS_rwinit2]           type1,
-    [SYS_rwtest2]           type3,
+    [SYS_rwinit2]          type1,
+    [SYS_rwtest2]          type3,
+    [SYS_set_luck]         type3,
+    [SYS_set_fcfs]         type1,
+    [SYS_set_priority]     type3,
+    [SYS_print_process]    type1,
 };
 static char *type_names[] = {
     [VOID]   "void",
@@ -109,8 +113,12 @@ static char *syscall_names[] = {
     [SYS_ticketlocktest]   "sys_ticketlocktest",
     [SYS_rwinit]           "sys_rwinit",
     [SYS_rwtest]           "sys_rwtest",
-    [SYS_rwinit2]           "sys_rwinit2",
-    [SYS_rwtest2]           "sys_rwtest2",
+    [SYS_rwinit2]          "sys_rwinit2",
+    [SYS_rwtest2]          "sys_rwtest2",
+    [SYS_set_luck]         "sys_set_luck",
+    [SYS_set_fcfs]         "sys_set_fcfs",
+    [SYS_set_priority]     "sys_set_priority",
+    [SYS_print_process]    "sys_print_process",
 };
 
 

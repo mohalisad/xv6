@@ -113,6 +113,9 @@ int             pipewrite(struct pipe*, char*, int);
 
 //PAGEBREAK: 16
 // proc.c
+void            add_to_fcfs(struct proc *p);
+void            add_to_priority(struct proc *p,int priority);
+void            add_to_luck(struct proc *p,int luck);
 int             cpuid(void);
 void            exit(void);
 int             fork(void);

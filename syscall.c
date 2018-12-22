@@ -108,6 +108,10 @@ extern int sys_invoked_syscalls(void);
 extern int sys_sort_syscalls(void);
 extern int sys_get_count(void);
 extern int sys_log_syscalls(void);
+extern int sys_set_luck(void);
+extern int sys_set_fcfs(void);
+extern int sys_set_priority(void);
+extern int sys_print_process(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -142,8 +146,11 @@ static int (*syscalls[])(void) = {
 [SYS_rwtest]           sys_rwtest,
 [SYS_rwinit2]          sys_rwinit2,
 [SYS_rwtest2]          sys_rwtest2,
+[SYS_set_luck]         sys_set_luck,
+[SYS_set_fcfs]         sys_set_fcfs,
+[SYS_set_priority]     sys_set_priority,
+[SYS_print_process]    sys_print_process,
 };
-
 void
 syscall(void)
 {

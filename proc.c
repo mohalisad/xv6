@@ -9,19 +9,17 @@
 #define MIN(x,y) (((x)>(y))?(y):(x))
 #define MAX_RAND 10000
 
+
+int  sys_uptime(void);
 void remove_from_que(struct proc *p);
 void sleep_in_que(struct proc *p);
 void wake_in_que(struct proc *p);
-void add_to_fcfs(struct proc *p);
-void add_to_priority(struct proc *p,int priority);
-void add_to_luck(struct proc *p,int luck);
 int  calc_min_priority();
 int  calc_min_fcfs();
 int  myrand(int mod);
 int  luck_count = 0;
 int  pr_count   = 0;
 int  fcfs_count = 0;
-int  ctime = 0;
 int  sum_luck = 0,min_priority = 0,min_fcfs = 0;
 int  randstate = 1;
 
@@ -130,7 +128,7 @@ found:
   p->logs = create_sclogs();
   p->run_mode = NO_QUE;
   add_to_luck(p,10);
-  p->ctime = ctime++;
+  p->ctime = sys_uptime();
   return p;
 }
 
@@ -616,7 +614,7 @@ void wake_in_que(struct proc *p){
 }
 void add_to_fcfs(struct proc *p){
     if(p->run_mode != NO_QUE)
-        panic("already in another que");
+        remove_from_que(p);
     acquire(&ptable.lock);
     p->run_mode = FCFS;
     if(fcfs_count == 0)
@@ -628,7 +626,7 @@ void add_to_fcfs(struct proc *p){
 }
 void add_to_priority(struct proc *p,int priority){
     if(p->run_mode != NO_QUE)
-        panic("already in another que");
+        remove_from_que(p);
     acquire(&ptable.lock);
     p->run_mode = PRIORITY;
     p->priority = priority;
@@ -641,7 +639,7 @@ void add_to_priority(struct proc *p,int priority){
 }
 void add_to_luck(struct proc *p,int luck){
     if(p->run_mode != NO_QUE)
-        panic("already in another que");
+        remove_from_que(p);
     acquire(&ptable.lock);
     p->run_mode = LUCK;
     p->priority = luck;
