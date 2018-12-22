@@ -7,7 +7,6 @@
 #include "proc.h"
 #include "spinlock.h"
 #define MIN(x,y) (((x)>(y))?(y):(x))
-#define MAX_RAND 10000
 
 
 int  sys_uptime(void);
@@ -127,7 +126,7 @@ found:
   p->context->eip = (uint)forkret;
   p->logs = create_sclogs();
   p->run_mode = NO_QUE;
-  add_to_luck(p,10);
+  //add_to_luck(p,10);
   p->ctime = sys_uptime();
   return p;
 }
@@ -356,17 +355,20 @@ scheduler(void)
       if(p->run_mode == LUCK)
         luck_total += p->priority;
       if(pr_count>0){
-          if(p->run_mode == PRIORITY)
+          if(p->run_mode == PRIORITY){
               if(p->priority != min_priority)
                 continue;
+          }else continue;
       }else if(fcfs_count>0){
-          if(p->run_mode == FCFS)
-              if(p->priority != min_fcfs)
+          if(p->run_mode == FCFS){
+              if(p->pid != min_fcfs)
                 continue;
+          }else continue;
       }else if(luck_count>0){
-          if(p->run_mode == LUCK)
+          if(p->run_mode == LUCK){
               if(!(luck_total >luck_random && luck_random>=luck_total-p->priority))
                 continue;
+          }else continue;
       }
       c->proc = p;
       switchuvm(p);
@@ -581,7 +583,7 @@ void sleep_in_que(struct proc *p){
     acquire(&ptable.lock);
     if(p->run_mode == FCFS){
         fcfs_count--;
-        min_priority = (fcfs_count==0 ? 0:calc_min_fcfs());
+        min_fcfs = (fcfs_count==0 ? 0:calc_min_fcfs());
     }
     if(p->run_mode == PRIORITY){
         pr_count--;
@@ -672,6 +674,10 @@ int  calc_min_fcfs(){
 
 int myrand(int mod){
   if(mod == 0)return -1;
-  randstate = (randstate * 645 + 10141)%MAX_RAND;
+  randstate = (randstate * 645 + 10141);
   return randstate%mod;
+}
+int sys_print_process(void){
+    cprintf("%d %d %d min:%d\n",luck_count,fcfs_count,pr_count,sum_luck);
+    return 0;
 }

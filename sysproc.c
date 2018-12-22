@@ -141,6 +141,3 @@ int sys_set_priority(void){
     add_to_priority(curproc,num);
     return 0;
 }
-int sys_print_process(void){
-    return 0;
-}
