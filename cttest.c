@@ -45,13 +45,27 @@ int main(int argc, char *argv[]){
     }
     if(!fork()){
         sleep(50);
-        set_luck(50);
+        set_luck(4);
         sleep(50);
         print_loop("luck");
+    }
+    if(!fork()){
+        sleep(50);
+        set_luck(3000);
+        sleep(50);
+        print_loop("luck22");
+    }
+    if(!fork()){
+        sleep(50);
+        set_luck(3000);
+        sleep(50);
+        print_loop("luck2");
     }
     printf(1,"created\n");
     wait();
     printf(1,"passed\n");
+    wait();
+    wait();
     wait();
     wait();
     wait();

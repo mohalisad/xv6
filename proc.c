@@ -6,6 +6,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#define MAX_RAND 815126
 #define MIN(x,y) (((x)>(y))?(y):(x))
 #define ABS(x)   ((x)<0?(-x):(x))
 
@@ -127,7 +128,7 @@ found:
   p->context->eip = (uint)forkret;
   p->logs = create_sclogs();
   p->run_mode = NO_QUE;
-  add_to_luck(p,10);
+  add_to_luck(p,10,0);
   p->ctime = sys_uptime();
   return p;
 }
@@ -574,11 +575,8 @@ void remove_from_que(struct proc *p){
     p->run_mode = NO_QUE;
 }
 void sleep_in_que(struct proc *p){
-    int locked = ptable.lock.locked;
     if(p->run_mode == NO_QUE)
         return;
-    if(!locked)
-        acquire(&ptable.lock);
     if(p->run_mode == FCFS){
         fcfs_count--;
         min_fcfs = (fcfs_count==0 ? 0:calc_min_fcfs());
@@ -592,8 +590,6 @@ void sleep_in_que(struct proc *p){
         sum_luck -= p->priority;
     }
     p->run_mode = -p->run_mode;
-    if(!locked)
-        release(&ptable.lock);
 }
 void wake_in_que(struct proc *p){
     int run_mode;
@@ -603,22 +599,21 @@ void wake_in_que(struct proc *p){
     p->run_mode = NO_QUE;
     switch (run_mode) {
         case FCFS:
-            add_to_fcfs(p);
+            add_to_fcfs(p,1);
             break;
         case PRIORITY:
-            add_to_priority(p,p->priority);
+            add_to_priority(p,p->priority,1);
             break;
         case LUCK:
-            add_to_luck(p,p->priority);
+            add_to_luck(p,p->priority,1);
             break;
     }
 }
-void add_to_fcfs(struct proc *p){
-    int locked = ptable.lock.locked;
-    if(p->run_mode != NO_QUE)
-        remove_from_que(p);
+void add_to_fcfs(struct proc *p,int locked){
     if(!locked)
         acquire(&ptable.lock);
+    if(p->run_mode != NO_QUE)
+        remove_from_que(p);
     p->run_mode = FCFS;
     if(fcfs_count == 0)
         min_fcfs = p->pid;
@@ -628,12 +623,11 @@ void add_to_fcfs(struct proc *p){
     if(!locked)
         release(&ptable.lock);
 }
-void add_to_priority(struct proc *p,int priority){
-    int locked = ptable.lock.locked;
-    if(p->run_mode != NO_QUE)
-        remove_from_que(p);
+void add_to_priority(struct proc *p,int priority,int locked){
     if(!locked)
         acquire(&ptable.lock);
+    if(p->run_mode != NO_QUE)
+        remove_from_que(p);
     p->run_mode = PRIORITY;
     p->priority = priority;
     if(pr_count == 0)
@@ -644,12 +638,11 @@ void add_to_priority(struct proc *p,int priority){
     if(!locked)
         release(&ptable.lock);
 }
-void add_to_luck(struct proc *p,int luck){
-    int locked = ptable.lock.locked;
-    if(p->run_mode != NO_QUE)
-        remove_from_que(p);
+void add_to_luck(struct proc *p,int luck,int locked){
     if(!locked)
         acquire(&ptable.lock);
+    if(p->run_mode != NO_QUE)
+        remove_from_que(p);
     p->run_mode = LUCK;
     p->priority = luck;
     sum_luck += luck;
@@ -682,9 +675,9 @@ int  calc_min_fcfs(){
 
 int myrand(int mod){
   if(mod == 0)return -1;
-  randstate = (randstate * 645 + 10141);
+  randstate = (randstate * 45381 + 11041);
   randstate = ABS(randstate);
-  return randstate%mod;
+  return randstate%ABS(mod);
 }
 int sys_print_process(void){
     cprintf("%d %d %d min:%d\n",luck_count,fcfs_count,pr_count,sum_luck);

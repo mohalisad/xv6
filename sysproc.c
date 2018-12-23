@@ -125,12 +125,12 @@ int sys_set_luck(void){
     struct proc *curproc = myproc();
     if(argint(0, &num) < 0)
       return -1;
-    add_to_luck(curproc,num);
+    add_to_luck(curproc,num,0);
     return 0;
 }
 int sys_set_fcfs(void){
     struct proc *curproc = myproc();
-    add_to_fcfs(curproc);
+    add_to_fcfs(curproc,0);
     return 0;
 }
 int sys_set_priority(void){
@@ -138,6 +138,6 @@ int sys_set_priority(void){
     struct proc *curproc = myproc();
     if(argint(0, &num) < 0)
       return -1;
-    add_to_priority(curproc,num);
+    add_to_priority(curproc,num,0);
     return 0;
 }
