@@ -11,10 +11,11 @@ void mysleep(int loop){
 
 void print_loop(const char* inp){
     for(int i=0;i<5;i++){
-        //print_process();
+        //
         printf(1,"%s\n",inp);
         mysleep(20);
     }
+    print_process();
     exit();
 }
 

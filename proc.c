@@ -680,6 +680,35 @@ int myrand(int mod){
   return randstate%ABS(mod);
 }
 int sys_print_process(void){
-    cprintf("%d %d %d min:%d\n",luck_count,fcfs_count,pr_count,sum_luck);
+    static char *states[] = {
+    [UNUSED]    "unused",
+    [EMBRYO]    "embryo",
+    [SLEEPING]  "sleep ",
+    [RUNNABLE]  "runble",
+    [RUNNING]   "run   ",
+    [ZOMBIE]    "zombie"
+    };
+    static char *modes[] = {
+    [NO_QUE]    "NO_QUE  ",
+    [FCFS]      "FCFS    ",
+    [PRIORITY]  "PRIORITY",
+    [LUCK]      "LUCK    ",
+    };
+    struct proc *p;
+    char *state,*mode;
+
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->state == UNUSED)
+        continue;
+      if(p->state >= 0 && p->state < NELEM(states) && states[p->state])
+        state = states[p->state];
+      else
+        state = "???";
+      if(p->state < NELEM(states) && states[ABS(p->state)])
+        mode = modes[ABS(p->run_mode)];
+      else
+        mode = "???";
+      cprintf("%d %s %s %s pr/ticket:%d ctime:%d\n", p->pid, state, p->name,mode,p->priority,p->ctime);
+    }
     return 0;
 }
