@@ -17,7 +17,7 @@ OBJS = \
 	pipe.o\
 	proc.o\
 	sclog.o\
-	shm.o\
+	sharedm.o\
 	sleeplock.o\
 	spinlock.o\
 	string.o\
