@@ -31,6 +31,7 @@ static int type9[]  = {CCHARS,INT};
 static int type10[] = {CHARS,CHARSS};
 static int type11[] = {INT,STATS};
 static int type12[] = {INT,VOIDS,INT};
+static int type13[] = {INT,INT,INT};
 
 static int* syscall_args[] = {
     [SYS_fork]    type1,
@@ -69,6 +70,9 @@ static int* syscall_args[] = {
     [SYS_set_fcfs]         type1,
     [SYS_set_priority]     type3,
     [SYS_print_process]    type1,
+    [SYS_shm_open]         type13,
+    [SYS_shm_attch]        type3,
+    [SYS_shm_close]        type3,
 };
 static char *type_names[] = {
     [VOID]   "void",
@@ -119,6 +123,9 @@ static char *syscall_names[] = {
     [SYS_set_fcfs]         "sys_set_fcfs",
     [SYS_set_priority]     "sys_set_priority",
     [SYS_print_process]    "sys_print_process",
+    [SYS_shm_open]         "sys_shm_open",
+    [SYS_shm_attch]        "sys_shm_attch",
+    [SYS_shm_close]        "sys_shm_close",
 };
 
 

@@ -112,6 +112,9 @@ extern int sys_set_luck(void);
 extern int sys_set_fcfs(void);
 extern int sys_set_priority(void);
 extern int sys_print_process(void);
+extern int sys_shm_open(void);
+extern int sys_shm_attch(void);
+extern int sys_shm_close(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -150,6 +153,9 @@ static int (*syscalls[])(void) = {
 [SYS_set_fcfs]         sys_set_fcfs,
 [SYS_set_priority]     sys_set_priority,
 [SYS_print_process]    sys_print_process,
+[SYS_shm_open]         sys_shm_open,
+[SYS_shm_attch]        sys_shm_attch,
+[SYS_shm_close]        sys_shm_close,
 };
 void
 syscall(void)

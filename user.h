@@ -39,6 +39,9 @@ int set_luck(int tickets);
 int set_fcfs();
 int set_priority(int priority);
 int print_process();
+int shm_open(int id,int page_count,int flag);
+void* shm_attch(int id);
+int shm_close(int id);
 
 // ulib.c
 int stat(const char*, struct stat*);
