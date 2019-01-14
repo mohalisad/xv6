@@ -41,7 +41,7 @@ enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
 // Per-process state
 struct proc {
-  uint sz;                     // Size of process memory (bytes)
+  uint sz,old_sz;                 // Size of process memory (bytes)
   pde_t* pgdir;                // Page table
   char *kstack;                // Bottom of kernel stack for this process
   enum procstate state;        // Process state
@@ -58,6 +58,8 @@ struct proc {
   int ctime;
   int run_mode;
   int priority;                // Or Luck valye
+  int vmas[10];
+  int vma_count;
 };
 
 // Process memory is laid out contiguously, low addresses first:

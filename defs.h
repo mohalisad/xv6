@@ -144,6 +144,7 @@ void            print_gllog();
 int             sumcount(struct sclog *sclogs);
 //sharedm.c
 void            free_shms_restricts(int pid);
+void            *mem_attach(int id,int pid,int parent_pid,struct proc* p);
 // swtch.S
 void            swtch(struct context**, struct context*);
 

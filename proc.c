@@ -127,7 +127,9 @@ found:
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
   p->logs = create_sclogs();
-  p->run_mode = NO_QUE;
+  p->vma_count = 0;
+  p->old_sz = 0;
+  p->run_mode  = NO_QUE;
   add_to_luck(p,10,0);
   p->ctime = sys_uptime();
   return p;
@@ -201,23 +203,25 @@ fork(void)
   int i, pid;
   struct proc *np;
   struct proc *curproc = myproc();
-
   // Allocate process.
   if((np = allocproc()) == 0){
     return -1;
   }
 
   // Copy process state from proc.
-  if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz)) == 0){
+  if((np->pgdir = copyuvm(curproc->pgdir, curproc->vma_count?curproc->old_sz:curproc->sz)) == 0){
     kfree(np->kstack);
     np->kstack = 0;
     np->state = UNUSED;
     return -1;
   }
-  np->sz = curproc->sz;
+  // Attach shms
+  np->sz = curproc->vma_count?curproc->old_sz:curproc->sz;
   np->parent = curproc;
   *np->tf = *curproc->tf;
-
+  for(i=0;i<curproc->vma_count;i++){
+      mem_attach(curproc->vmas[i],np->pid,np->parent->pid,np);
+  }
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
 
@@ -235,7 +239,6 @@ fork(void)
   np->state = RUNNABLE;
 
   release(&ptable.lock);
-
   return pid;
 }
 
