@@ -142,6 +142,8 @@ void            sort_sclogs_by_pid(int pid);
 int             get_callcount(int pid,int scid);
 void            print_gllog();
 int             sumcount(struct sclog *sclogs);
+//sharedm.c
+void            free_shms_restricts(int pid);
 // swtch.S
 void            swtch(struct context**, struct context*);
 

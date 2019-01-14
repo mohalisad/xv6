@@ -1,5 +1,6 @@
 struct stat;
 struct rtcdate;
+#include "sharedm.h"
 
 // system calls
 
@@ -40,7 +41,7 @@ int set_fcfs();
 int set_priority(int priority);
 int print_process();
 int shm_open(int id,int page_count,int flag);
-void* shm_attch(int id);
+void* shm_attach(int id);
 int shm_close(int id);
 
 // ulib.c

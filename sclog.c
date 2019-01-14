@@ -71,7 +71,7 @@ static int* syscall_args[] = {
     [SYS_set_priority]     type3,
     [SYS_print_process]    type1,
     [SYS_shm_open]         type13,
-    [SYS_shm_attch]        type3,
+    [SYS_shm_attach]        type3,
     [SYS_shm_close]        type3,
 };
 static char *type_names[] = {
@@ -124,7 +124,7 @@ static char *syscall_names[] = {
     [SYS_set_priority]     "sys_set_priority",
     [SYS_print_process]    "sys_print_process",
     [SYS_shm_open]         "sys_shm_open",
-    [SYS_shm_attch]        "sys_shm_attch",
+    [SYS_shm_attach]        "sys_shm_attach",
     [SYS_shm_close]        "sys_shm_close",
 };
 

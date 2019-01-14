@@ -36,5 +36,5 @@
 #define SYS_set_priority     35
 #define SYS_print_process    36
 #define SYS_shm_open         37
-#define SYS_shm_attch        38
+#define SYS_shm_attach        38
 #define SYS_shm_close        39

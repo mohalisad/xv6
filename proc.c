@@ -275,6 +275,7 @@ exit(void)
         wakeup1(initproc);
     }
   }
+  free_shms_restricts(curproc->pid);
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
   remove_from_que(curproc);
@@ -671,6 +672,10 @@ int  calc_min_fcfs(){
             retu = MIN(retu,p->pid);
     }
     return retu;
+}
+
+int  get_parent_pid(){
+    return myproc()->parent->pid;
 }
 
 int myrand(int mod){
