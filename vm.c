@@ -69,6 +69,7 @@ mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
       return -1;
     if(*pte & PTE_P)
       panic("remap");
+
     *pte = pa | perm | PTE_P;
     if(a == last)
       break;
@@ -250,7 +251,6 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   }
   return newsz;
 }
-
 // Deallocate user pages to bring the process size from oldsz to
 // newsz.  oldsz and newsz need not be page-aligned, nor does newsz
 // need to be less than oldsz.  oldsz can be larger than the actual
@@ -293,8 +293,12 @@ freevm(pde_t *pgdir)
   deallocuvm(pgdir, KERNBASE, 0);
   for(i = 0; i < NPDENTRIES; i++){
     if(pgdir[i] & PTE_P){
-      char * v = P2V(PTE_ADDR(pgdir[i]));
-      kfree(v);
+      if(!(pgdir[i] & PTE_SM)){
+          char * v = P2V(PTE_ADDR(pgdir[i]));
+          kfree(v);
+      }else{
+          cprintf("HHHHHHEEEEE!!!!");
+      }
     }
   }
   kfree((char*)pgdir);

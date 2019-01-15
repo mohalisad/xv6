@@ -20,7 +20,7 @@ struct shm{
     int   flags;
     int   ref_count;
     int   size;
-    void *frames[FRAMES_MAX];
+    char *frames[FRAMES_MAX];
 }mems[MEMS_MAX];
 
 int mems_count = 0;
@@ -68,7 +68,7 @@ void create_mem(int id,int pid,int size,int flags){
     mems[mems_count].ref_count = 0;
     for(i=0;i<size;i++){
         mems[mems_count].frames[i] = kalloc();
-        cprintf("created\n");
+        memset(mems[mems_count].frames[i], 0, PGSIZE);
     }
     mems_count++;
 }
@@ -86,6 +86,7 @@ void *mem_attach(int id,int pid,int parent_pid,struct proc *p){
     int index;
     int owner = 0,write_access = 0;//bool
     int i;
+    //int state;
     void *vm;
     index = get_index_by_id(id);
     if(check_attached(id,p)){//already attached
@@ -101,15 +102,16 @@ void *mem_attach(int id,int pid,int parent_pid,struct proc *p){
         }
     }
     write_access = (owner) || !(mems[index].flags&ONLY_OWNER_WRITE);
-    if(p->old_sz==0){
-        p->old_sz  = p->sz;
+    if(p->my_sz==0){
+        p->my_sz  = p->sz;
     }
     p->vmas[p->vma_count++] = id;
     mems[index].ref_count++;
-    vm = (void*)PGROUNDUP(p->sz);
+    p->my_sz = PGROUNDUP(p->my_sz);
+    vm = (void*)p;
     for(i=0;i<mems[index].size;i++){
-        mymap(p->pgdir, (char*)PGROUNDUP(p->sz), PGSIZE, V2P(mems[index].frames[i]), (write_access?PTE_W:0)|PTE_U);
-        p->sz += PGSIZE;
+        mymap(p->pgdir,(char*)p->my_sz, PGSIZE,V2P(mems[index].frames[i]), (write_access?PTE_W:0)|PTE_U|PTE_SM);
+        p->my_sz += PGSIZE;
     }
     return vm;
 }
@@ -134,8 +136,15 @@ int sys_shm_attach(){
     return (int)mem_attach(id,sys_getpid(),get_parent_pid(),myproc());
 }
 int sys_shm_close(){
-    int id;
+    int id,index;
     if(argint(0, &id))
         return -1;
+    if((index = get_index_by_id(id))==-1){
+        return -1;//doesn't exist exist
+    }
+    mems[index].ref_count--;
+    if(mems[index].ref_count == 0){
+        remove_from_mems(index);
+    }
     return 0;
 }

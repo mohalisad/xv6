@@ -128,7 +128,7 @@ found:
   p->context->eip = (uint)forkret;
   p->logs = create_sclogs();
   p->vma_count = 0;
-  p->old_sz = 0;
+  p->my_sz = 0;
   p->run_mode  = NO_QUE;
   add_to_luck(p,10,0);
   p->ctime = sys_uptime();
@@ -209,14 +209,14 @@ fork(void)
   }
 
   // Copy process state from proc.
-  if((np->pgdir = copyuvm(curproc->pgdir, curproc->vma_count?curproc->old_sz:curproc->sz)) == 0){
+  if((np->pgdir = copyuvm(curproc->pgdir,curproc->sz)) == 0){
     kfree(np->kstack);
     np->kstack = 0;
     np->state = UNUSED;
     return -1;
   }
   // Attach shms
-  np->sz = curproc->vma_count?curproc->old_sz:curproc->sz;
+  np->sz = curproc->sz;
   np->parent = curproc;
   *np->tf = *curproc->tf;
   for(i=0;i<curproc->vma_count;i++){
