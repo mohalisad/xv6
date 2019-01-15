@@ -27,7 +27,7 @@ int mems_count = 0;
 
 void remove_from_mems(int index){
     int i,j;
-    for (i=0;i<mems_count-1;i++){
+    for (i=index;i<mems_count-1;i++){
         mems[i].id        = mems[i+1].id;
         mems[i].pid       = mems[i+1].pid;
         mems[i].flags     = mems[i+1].flags;
@@ -93,9 +93,7 @@ void *mem_attach(int id,int pid,int parent_pid,struct proc *p){
     if(mems[index].pid == pid){//owner
         owner = 1;
     }else if(mems[index].flags&ONLY_CHILD_CAN_ATTACH){
-        if(mems[index].pid == parent_pid){
-            owner = 0;
-        }else{//access denied
+        if(mems[index].pid != parent_pid){//access denied
             return (void*)-1;
         }
     }
