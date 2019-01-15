@@ -12,7 +12,6 @@
 
 extern int sys_getpid(void);
 extern int get_parent_pid();
-extern int mymap(pde_t *pgdir, void *va, uint size, uint pa, int perm);
 int customuvm(pde_t *pgdir, uint oldsz, uint newsz,char **mems,int perm);
 
 struct shm{
@@ -69,7 +68,6 @@ void create_mem(int id,int pid,int size,int flags){
     mems[mems_count].ref_count = 0;
     for(i=0;i<size;i++){
         mems[mems_count].frames[i] = kalloc();
-        cprintf("AA %d\n",mems[mems_count].frames[i]);
         memset(mems[mems_count].frames[i], 0, PGSIZE);
     }
     mems_count++;

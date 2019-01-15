@@ -67,13 +67,13 @@ mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
   for(;;){
     if((pte = walkpgdir(pgdir, a, 1)) == 0)
       return -1;
+    if(perm&PTE_SM){
+      pgdir[PDX(va)] |= PTE_SM;
+    }
     if(*pte & PTE_P)
       panic("remap");
 
     *pte = pa | perm | PTE_P;
-    if(*pte&PTE_SM){
-        cprintf("CCC %d\n",P2V(PTE_ADDR(*pte)));
-    }
     if(a == last)
       break;
     a += PGSIZE;
@@ -81,11 +81,7 @@ mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
   }
   return 0;
 }
-int
-mymap(pde_t *pgdir, void *va, uint size, uint pa, int perm)
-{
-    return mappages(pgdir,va,size,pa,perm);
-}
+
 // There is one page table per process, plus one that's used when
 // a CPU is not running any process (kpgdir). The kernel uses the
 // current process's page table during system calls and interrupts;
@@ -259,16 +255,14 @@ customuvm(pde_t *pgdir, uint oldsz, uint newsz,char **mems,int perm)
 {
   char *mem;
   uint a;
-
+  //return allocuvm(pgdir, oldsz,newsz);
   if(newsz >= KERNBASE)
     return 0;
   if(newsz < oldsz)
     return oldsz;
 
   a = PGROUNDUP(oldsz);
-  cprintf("BegLOOP\n");
   for(; a < newsz; a += PGSIZE){
-cprintf("LOOP\n");
     mem = (*(mems++));
     if(mem == 0){
       cprintf("allocuvm out of memory\n");
@@ -302,7 +296,7 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
     pte = walkpgdir(pgdir, (char*)a, 0);
     if(!pte)
       a = PGADDR(PDX(a) + 1, 0, 0) - PGSIZE;
-    else if((*pte & PTE_P) != 0){
+    else if((*pte & PTE_P) != 0 && (*pte & PTE_SM) == 0 ){
       pa = PTE_ADDR(*pte);
       if(pa == 0)
         panic("kfree");
@@ -326,11 +320,9 @@ freevm(pde_t *pgdir)
   deallocuvm(pgdir, KERNBASE, 0);
   for(i = 0; i < NPDENTRIES; i++){
     if(pgdir[i] & PTE_P){
-      if((pgdir[i] & PTE_SM)==0){
+      if(!(pgdir[i] & PTE_SM)){
           char * v = P2V(PTE_ADDR(pgdir[i]));
           kfree(v);
-      }else{
-          cprintf("HHHHHHEEEEE!!!!\n");
       }
     }
   }
