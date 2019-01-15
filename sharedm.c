@@ -68,6 +68,7 @@ void create_mem(int id,int pid,int size,int flags){
     mems[mems_count].ref_count = 0;
     for(i=0;i<size;i++){
         mems[mems_count].frames[i] = kalloc();
+        cprintf("AA %d\n",mems[mems_count].frames[i]);
         memset(mems[mems_count].frames[i], 0, PGSIZE);
     }
     mems_count++;
@@ -112,6 +113,7 @@ void *mem_attach(int id,int pid,int parent_pid,struct proc *p){
         mymap(p->pgdir,(char*) PGROUNDUP(p->my_sz), PGSIZE,V2P(mems[index].frames[i]), (write_access?PTE_W:0)|PTE_U|PTE_SM);
         p->my_sz += PGSIZE;
     }
+    p->sz = p->my_sz;
     return vm;
 }
 

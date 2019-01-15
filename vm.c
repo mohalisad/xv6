@@ -71,6 +71,9 @@ mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
       panic("remap");
 
     *pte = pa | perm | PTE_P;
+    if(*pte&PTE_SM){
+        cprintf("CCC %d\n",P2V(PTE_ADDR(*pte)));
+    }
     if(a == last)
       break;
     a += PGSIZE;
@@ -294,10 +297,10 @@ freevm(pde_t *pgdir)
   for(i = 0; i < NPDENTRIES; i++){
     if(pgdir[i] & PTE_P){
       if(!(pgdir[i] & PTE_SM)){
-          char * v = P2V(PTE_ADDR(pgdir[i]));
+          char * v = P2V(PTE_ADDR(pgdir[i])); 
           kfree(v);
       }else{
-          cprintf("HHHHHHEEEEE!!!!");
+          cprintf("HHHHHHEEEEE!!!!\n");
       }
     }
   }
