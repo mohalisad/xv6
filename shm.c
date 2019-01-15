@@ -12,7 +12,7 @@ void mysleep(int loop){
 int main(int argc, char *argv[]){
     //int a;
     int *p,*q;
-    shm_open(4,1,0);
+    shm_open(4,3,0);
     //shm_open(5,2,0);
     if(!fork()){
         p = (int*)shm_attach(4);
@@ -32,12 +32,13 @@ int main(int argc, char *argv[]){
     }
     mysleep(10);
     q = (int*)shm_attach(4);
-    for(int i=0;i<1;i++){
+    for(int i=0;i<100;i++){
         printf(1,"%d\n",q[i] );
     }
     wait();
     wait();
     shm_close(4);
-    shm_close(5);
+    shm_close(4);
+    //shm_close(5);
     exit();
 }

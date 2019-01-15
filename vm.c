@@ -254,6 +254,36 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   }
   return newsz;
 }
+int
+customuvm(pde_t *pgdir, uint oldsz, uint newsz,char **mems,int perm)
+{
+  char *mem;
+  uint a;
+
+  if(newsz >= KERNBASE)
+    return 0;
+  if(newsz < oldsz)
+    return oldsz;
+
+  a = PGROUNDUP(oldsz);
+  cprintf("BegLOOP\n");
+  for(; a < newsz; a += PGSIZE){
+cprintf("LOOP\n");
+    mem = (*(mems++));
+    if(mem == 0){
+      cprintf("allocuvm out of memory\n");
+      deallocuvm(pgdir, newsz, oldsz);
+      return 0;
+    }
+    if(mappages(pgdir, (char*)a, PGSIZE, V2P(mem), perm|PTE_U) < 0){
+      cprintf("allocuvm out of memory (2)\n");
+      deallocuvm(pgdir, newsz, oldsz);
+      kfree(mem);
+      return 0;
+    }
+  }
+  return newsz;
+}
 // Deallocate user pages to bring the process size from oldsz to
 // newsz.  oldsz and newsz need not be page-aligned, nor does newsz
 // need to be less than oldsz.  oldsz can be larger than the actual
@@ -296,8 +326,8 @@ freevm(pde_t *pgdir)
   deallocuvm(pgdir, KERNBASE, 0);
   for(i = 0; i < NPDENTRIES; i++){
     if(pgdir[i] & PTE_P){
-      if(!(pgdir[i] & PTE_SM)){
-          char * v = P2V(PTE_ADDR(pgdir[i])); 
+      if((pgdir[i] & PTE_SM)==0){
+          char * v = P2V(PTE_ADDR(pgdir[i]));
           kfree(v);
       }else{
           cprintf("HHHHHHEEEEE!!!!\n");

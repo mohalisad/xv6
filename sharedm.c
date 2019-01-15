@@ -13,6 +13,7 @@
 extern int sys_getpid(void);
 extern int get_parent_pid();
 extern int mymap(pde_t *pgdir, void *va, uint size, uint pa, int perm);
+int customuvm(pde_t *pgdir, uint oldsz, uint newsz,char **mems,int perm);
 
 struct shm{
     int   id;
@@ -86,7 +87,6 @@ int check_attached(int id,struct proc *p){
 void *mem_attach(int id,int pid,int parent_pid,struct proc *p){
     int index;
     int owner = 0,write_access = 0;//bool
-    int i;
     void *vm;
     index = get_index_by_id(id);
     if(check_attached(id,p)){//already attached
@@ -107,13 +107,14 @@ void *mem_attach(int id,int pid,int parent_pid,struct proc *p){
     }
     p->vmas[p->vma_count++] = id;
     mems[index].ref_count++;
-    vm = (void*)PGROUNDUP(p->my_sz);
+    vm = (void*)PGROUNDUP(p->sz);
+    p->sz = customuvm(p->pgdir, p->sz, p->sz + mems[index].size*PGSIZE ,mems[index].frames,(write_access?PTE_W:0)|PTE_SM);
+    /*
     for(i=0;i<mems[index].size;i++){
-        if(write_access)
-        mymap(p->pgdir,(char*) PGROUNDUP(p->my_sz), PGSIZE,V2P(mems[index].frames[i]), (write_access?PTE_W:0)|PTE_U|PTE_SM);
+        //mymap(p->pgdir,(char*) PGROUNDUP(p->my_sz), PGSIZE,V2P(mems[index].frames[i]), (write_access?PTE_W:0)|PTE_U|PTE_SM);
         p->my_sz += PGSIZE;
-    }
-    p->sz = p->my_sz;
+    }*/
+    //p->sz = p->my_sz;
     return vm;
 }
 
@@ -132,7 +133,7 @@ int sys_shm_attach(){
     if(argint(0, &id))
         return -1;
     if(get_index_by_id(id)==-1){
-        return -1;//doesn't exist exist
+        return -1;//doesn't exist
     }
     return (int)mem_attach(id,sys_getpid(),get_parent_pid(),myproc());
 }
@@ -141,7 +142,7 @@ int sys_shm_close(){
     if(argint(0, &id))
         return -1;
     if((index = get_index_by_id(id))==-1){
-        return -1;//doesn't exist exist
+        return -1;//doesn't exist
     }
     mems[index].ref_count--;
     if(mems[index].ref_count == 0){
