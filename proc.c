@@ -128,7 +128,7 @@ found:
   p->context->eip = (uint)forkret;
   p->logs = create_sclogs();
   p->vma_count = 0;
-  p->my_sz = 0;
+  p->old_sz = 0;
   p->run_mode  = NO_QUE;
   add_to_luck(p,10,0);
   p->ctime = sys_uptime();
@@ -201,22 +201,23 @@ int
 fork(void)
 {
   int i, pid;
+  uint sz;
   struct proc *np;
   struct proc *curproc = myproc();
   // Allocate process.
   if((np = allocproc()) == 0){
     return -1;
   }
-
+  sz = curproc->old_sz==0?curproc->sz:curproc->old_sz;
   // Copy process state from proc.
-  if((np->pgdir = copyuvm(curproc->pgdir,curproc->sz)) == 0){
+  if((np->pgdir = copyuvm(curproc->pgdir,sz)) == 0){
     kfree(np->kstack);
     np->kstack = 0;
     np->state = UNUSED;
     return -1;
   }
   // Attach shms
-  np->sz = curproc->sz;
+  np->sz = sz;
   np->parent = curproc;
   *np->tf = *curproc->tf;
   for(i=0;i<curproc->vma_count;i++){

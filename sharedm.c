@@ -100,19 +100,13 @@ void *mem_attach(int id,int pid,int parent_pid,struct proc *p){
         }
     }
     write_access = (owner) || !(mems[index].flags&ONLY_OWNER_WRITE);
-    if(p->my_sz==0){
-        p->my_sz  = p->sz;
+    if(p->old_sz==0){
+        p->old_sz  = p->sz;
     }
     p->vmas[p->vma_count++] = id;
     mems[index].ref_count++;
     vm = (void*)PGROUNDUP(p->sz);
     p->sz = customuvm(p->pgdir, p->sz, p->sz + mems[index].size*PGSIZE ,mems[index].frames,(write_access?PTE_W:0)|PTE_SM);
-    /*
-    for(i=0;i<mems[index].size;i++){
-        //mymap(p->pgdir,(char*) PGROUNDUP(p->my_sz), PGSIZE,V2P(mems[index].frames[i]), (write_access?PTE_W:0)|PTE_U|PTE_SM);
-        p->my_sz += PGSIZE;
-    }*/
-    //p->sz = p->my_sz;
     return vm;
 }
 
