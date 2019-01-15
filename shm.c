@@ -51,10 +51,24 @@ void test2(){
     }
     wait();
 }
+void test3(){
+    int *p;
+    shm_open(7,5,0);
+    p = (int*)shm_attach(7);
+    if(!fork()){
+        shm_close(7);
+        exit();
+    }
+    wait();
+    if(p)
+        shm_close(7);
+}
 int main(int argc, char *argv[]){
     printf(1,"test1\n");
     test1();
     printf(1,"test2\n");
     test2();
+    printf(1,"test3\n");
+    test3();
     exit();
 }

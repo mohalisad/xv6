@@ -137,6 +137,7 @@ int sys_shm_close(){
     mems[index].ref_count--;
     if(mems[index].ref_count == 0){
         remove_from_mems(index);
+        cprintf("closed shm %d\n",mems[index].id);
     }
     return 0;
 }
