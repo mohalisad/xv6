@@ -86,7 +86,6 @@ void *mem_attach(int id,int pid,int parent_pid,struct proc *p){
     int index;
     int owner = 0,write_access = 0;//bool
     int i;
-    //int state;
     void *vm;
     index = get_index_by_id(id);
     if(check_attached(id,p)){//already attached
@@ -107,10 +106,10 @@ void *mem_attach(int id,int pid,int parent_pid,struct proc *p){
     }
     p->vmas[p->vma_count++] = id;
     mems[index].ref_count++;
-    p->my_sz = PGROUNDUP(p->my_sz);
-    vm = (void*)p;
+    vm = (void*)PGROUNDUP(p->my_sz);
     for(i=0;i<mems[index].size;i++){
-        mymap(p->pgdir,(char*)p->my_sz, PGSIZE,V2P(mems[index].frames[i]), (write_access?PTE_W:0)|PTE_U|PTE_SM);
+        if(write_access)
+        mymap(p->pgdir,(char*) PGROUNDUP(p->my_sz), PGSIZE,V2P(mems[index].frames[i]), (write_access?PTE_W:0)|PTE_U|PTE_SM);
         p->my_sz += PGSIZE;
     }
     return vm;
